@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html class="ltr-support" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Market Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Palette: Dhofar sea teal + frankincense gold on a cool slate ground. Layout: unit rail on top, tool tabs, one working canvas. */
+  --bg:#eef2f5; --surface:#ffffff; --ink:#13202e; --muted:#566676; --line:#d5dee6;
+  --accent:#0d7a72; --accent-ink:#ffffff; --gold:#c98a00; --gold-soft:#fbf0d4; --tint:#e3f1ef;
+  --good:#1f8a4c; --good-soft:#e2f4e9; --bad:#c2410c; --bad-soft:#fde9df; --ng:#4b5ea8; --ng-soft:#e6eafa;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --arabic:"Tajawal","Segoe UI","Tahoma",sans-serif;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e161e; --surface:#16212c; --ink:#e7eef4; --muted:#9fb2c2; --line:#2a3a49;
+  --accent:#2bb3a6; --accent-ink:#06201d; --gold:#f0bb3a; --gold-soft:#3a2f12; --tint:#143331;
+  --good:#4cc47f; --good-soft:#123222; --bad:#f08a5d; --bad-soft:#3a1d12; --ng:#93a5ef; --ng-soft:#1d2448;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0e161e; --surface:#16212c; --ink:#e7eef4; --muted:#9fb2c2; --line:#2a3a49;
+  --accent:#2bb3a6; --accent-ink:#06201d; --gold:#f0bb3a; --gold-soft:#3a2f12; --tint:#143331;
+  --good:#4cc47f; --good-soft:#123222; --bad:#f08a5d; --bad-soft:#3a1d12; --ng:#93a5ef; --ng-soft:#1d2448;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+html.big body{font-size:21px}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.ar{font-family:var(--arabic);direction:rtl;text-align:right}
+html.ltr-support .ar{font-family:inherit;direction:ltr;text-align:left}
+html.ltr-support .mi.ar{text-align:left}
+.muted{color:var(--muted)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+
+/* header */
+header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top{display:flex;align-items:center;gap:14px;padding:12px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;flex:1;min-width:220px}
+.brand h1{font-size:1.35rem;letter-spacing:-.01em}
+.brand h1 span{color:var(--accent)}
+.brand small{color:var(--muted);font-size:.85rem}
+.tbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:.88rem}
+.tbtn[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.units{display:grid;grid-template-columns:repeat(8,minmax(118px,1fr));gap:8px;overflow-x:auto;padding:0 0 12px;scrollbar-width:thin}
+.unit{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:7px 10px;text-align:left}
+.unit span{line-height:1.2}
+.unit b{font-family:var(--display);font-size:.78rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.unit span{font-size:.92rem;font-weight:700}
+.unit[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.unit[aria-current="true"] b{color:inherit;opacity:.85}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;border-top:1px solid var(--line)}
+nav.tabs button{border:0;background:none;padding:10px 14px;border-bottom:3px solid transparent;white-space:nowrap;font-weight:700;color:var(--muted)}
+nav.tabs button[aria-current="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+
+/* scoreboard */
+#scoreboard{background:var(--ink);color:var(--surface)}
+#scoreboard .wrap{display:flex;gap:10px;align-items:center;padding:8px 18px;flex-wrap:wrap}
+.team{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border-radius:999px;padding:3px 6px 3px 12px}
+.team input{width:92px;background:transparent;border:0;color:inherit;font-weight:700}
+.team .pts{font-family:var(--display);font-size:1.25rem;min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
+.team button{border:0;border-radius:50%;width:28px;height:28px;background:rgba(255,255,255,.16);color:inherit;font-weight:700}
+.team.turn{box-shadow:0 0 0 2px var(--gold)}
+#scoreboard .tbtn{background:transparent;color:inherit;border-color:rgba(255,255,255,.35)}
+@media (max-width:700px){header{position:static}.team input{width:70px}}
+
+main{padding:22px 0 60px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.head h2{font-size:1.75rem}
+.head .ar{font-size:1.05rem;color:var(--muted)}
+.sub{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.sub button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 15px;font-weight:700}
+.sub button[aria-current="true"]{background:var(--tint);border-color:var(--accent);color:var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:9px 16px;font-weight:700}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#1d1400}
+.btn.small{padding:5px 11px;font-size:.88rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:700;background:var(--tint);color:var(--accent)}
+
+/* teacher note */
+.tnote{border:1px solid var(--gold);background:var(--gold-soft);border-radius:var(--r);margin-bottom:14px}
+.tnote summary{cursor:pointer;padding:8px 16px;font-weight:700;font-size:.92rem;list-style:none;color:var(--ink)}
+.tnote summary::-webkit-details-marker{display:none}
+.tnote summary::before{content:"▾ ";}
+.tnote:not([open]) summary::before{content:"▸ ";}
+.tnote .tbody{padding:0 18px 12px;font-size:.95rem;line-height:1.6}
+.tnote .tbody ol,.tnote .tbody ul{margin:4px 0;padding-left:20px}
+
+/* guide */
+.guide h3{font-size:1.1rem;margin-bottom:6px}
+.guide .ar p{margin:0}
+.plan{width:100%;border-collapse:collapse;direction:ltr;text-align:left}
+.plan td,.plan th{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+.plan th{color:var(--muted);font-weight:700}
+.plan td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--accent);font-weight:700}
+
+/* flashcards */
+.flash-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.flash{width:min(620px,100%);min-height:280px;perspective:1200px;cursor:pointer;border:0;background:none;padding:0}
+.flash-inner{position:relative;width:100%;min-height:280px;transition:transform .5s;transform-style:preserve-3d}
+.flash.flipped .flash-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;border:1px solid var(--line)}
+.face.front{background:var(--surface)}
+.face.front .word{font-family:var(--display);font-size:3rem;letter-spacing:-.01em}
+.face.back{background:var(--tint);transform:rotateY(180deg);gap:8px}
+.face.back .def{font-size:1.25rem;font-weight:700}
+.face.back .ex{font-style:italic}
+.face.back .arw{font-family:var(--arabic);font-size:1.3rem;color:var(--accent)}
+.meter{height:8px;width:min(620px,100%);background:var(--line);border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);transition:width .3s}
+table.list{width:100%;border-collapse:collapse}
+table.list th,table.list td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+table.list th{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tblwrap{overflow-x:auto}
+
+/* match */
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match .col{display:flex;flex-direction:column;gap:8px}
+.mi{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;text-align:left;font-weight:700}
+.mi.ar{text-align:right}
+.mi.sel{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.mi.done{background:var(--good-soft);border-color:var(--good);color:var(--good);cursor:default}
+.mi.wrong{animation:shake .35s;border-color:var(--bad);background:var(--bad-soft)}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.qline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.qline input{border:1px solid var(--line);border-radius:8px;padding:6px 10px;width:150px;background:var(--bg)}
+.ok{color:var(--good);font-weight:700}.no{color:var(--bad);font-weight:700}
+input.ok{border-color:var(--good)!important;background:var(--good-soft)!important}
+input.no{border-color:var(--bad)!important;background:var(--bad-soft)!important}
+
+/* jeopardy */
+.jboard{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:8px;overflow-x:auto}
+.jcat{background:var(--ink);color:var(--surface);border-radius:10px;padding:10px;text-align:center;font-family:var(--display);font-weight:700;min-height:58px;display:flex;align-items:center;justify-content:center}
+.jcell{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;font-family:var(--display);font-size:1.7rem;font-weight:800;min-height:74px}
+.jcell.used{background:var(--line);color:var(--muted);cursor:default}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,18,26,.66);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal .box{background:var(--surface);border-radius:18px;max-width:760px;width:100%;padding:26px;max-height:92vh;overflow:auto}
+.modal .q{font-size:1.6rem;font-weight:700;margin:12px 0 18px}
+.modal .a{font-size:1.4rem;color:var(--good);font-weight:700;margin-bottom:14px}
+
+/* timer */
+.timer{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-variant-numeric:tabular-nums}
+.timer .t{font-size:1.6rem;font-weight:800;min-width:4ch}
+.timer.low .t{color:var(--bad)}
+
+/* wheel */
+.wheel-area{display:grid;grid-template-columns:minmax(260px,420px) 1fr;gap:20px;align-items:start}
+@media (max-width:760px){.wheel-area{grid-template-columns:1fr}}
+.wheel-box{position:relative}
+.wheel-box canvas{width:100%;height:auto;display:block}
+.pointer{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:28px solid var(--gold)}
+.cue{border:2px dashed var(--accent);border-radius:14px;padding:18px}
+.cue h4{font-size:1.2rem;margin-bottom:6px}
+.cue ul{margin:6px 0}
+
+/* big card games */
+.bigcard{text-align:center;padding:30px 20px}
+.bigcard .w{font-family:var(--display);font-size:2.6rem;font-weight:800}
+.taboo-list{list-style:none;padding:0;margin:14px 0;display:flex;flex-direction:column;gap:6px}
+.taboo-list li{background:var(--bad-soft);color:var(--bad);border-radius:8px;padding:6px;font-weight:700;text-decoration:line-through}
+
+/* crossword */
+.cw-area{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start}
+@media (max-width:860px){.cw-area{grid-template-columns:1fr}}
+.cw-scroll{overflow-x:auto}
+.cw{display:grid;gap:2px;width:max-content}
+.cw .c{width:34px;height:34px;position:relative}
+.cw .c.on{background:var(--surface);border:1px solid var(--ink)}
+.cw .c input{width:100%;height:100%;border:0;text-align:center;font-weight:800;font-size:1.05rem;text-transform:uppercase;background:transparent;padding:0}
+.cw .c sup{position:absolute;top:1px;left:2px;font-size:.6rem;color:var(--muted);pointer-events:none}
+.cw .c.ok{background:var(--good-soft)}.cw .c.no{background:var(--bad-soft)}
+.clues h4{margin:8px 0 4px}
+.clues ol{padding-left:0;margin:0;list-style:none}
+.clues li{padding:3px 0}
+.clues li b{color:var(--accent);margin-right:6px}
+
+/* word search */
+.ws{display:grid;gap:3px;width:max-content;user-select:none}
+.ws button{width:34px;height:34px;border:1px solid var(--line);background:var(--surface);border-radius:6px;font-weight:800;padding:0}
+.ws button.start{background:var(--gold-soft);border-color:var(--gold)}
+.ws button.found{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.wlist{display:flex;flex-wrap:wrap;gap:6px}
+.wlist span{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-weight:700;font-size:.9rem}
+.wlist span.found{text-decoration:line-through;color:var(--muted);background:var(--tint)}
+
+/* scramble */
+.tiles{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.tile{width:48px;height:52px;border-radius:10px;border:1px solid var(--line);background:var(--gold-soft);font-family:var(--display);font-size:1.5rem;font-weight:800}
+.tile:disabled{opacity:.25}
+.answer-line{min-height:56px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;font-family:var(--display);font-size:1.8rem;font-weight:800;letter-spacing:.12em;border-bottom:3px solid var(--accent);padding:4px 12px;margin:0 auto;width:fit-content;min-width:200px}
+
+/* reading */
+.reading{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start}
+@media (max-width:900px){.reading{grid-template-columns:1fr}}
+.passage p{margin:0 0 12px;max-width:68ch}
+.passage p b{color:var(--muted);font-family:var(--display);margin-right:6px}
+.tf{padding:10px 0;border-bottom:1px solid var(--line)}
+.tf .opts{display:flex;gap:6px;margin-top:6px}
+.tf .opts label{border:1px solid var(--line);border-radius:8px;padding:3px 12px;cursor:pointer;font-weight:700}
+.tf .opts input{position:absolute;opacity:0;pointer-events:none}
+.tf .opts label:has(input:checked){background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.tf .opts label:has(input:focus-visible){outline:3px solid var(--gold)}
+.fb{font-size:.92rem;margin-top:6px}
+.badge{display:inline-block;border-radius:6px;padding:0 8px;font-weight:800;font-size:.85rem}
+.badge.T{background:var(--good-soft);color:var(--good)}.badge.F{background:var(--bad-soft);color:var(--bad)}.badge.NG{background:var(--ng-soft);color:var(--ng)}
+.scorebig{font-family:var(--display);font-size:2rem;font-weight:800;color:var(--accent)}
+
+/* grammar doctor */
+.gd{padding:14px 0;border-bottom:1px solid var(--line)}
+.gd .tokens{display:flex;flex-wrap:wrap;gap:4px;font-size:1.2rem}
+.gd .tok{border:1px solid transparent;background:none;border-radius:6px;padding:2px 5px}
+.gd .tok:hover{border-color:var(--line);background:var(--bg)}
+.gd .tok.hit{background:var(--good-soft);color:var(--good);font-weight:800}
+.gd .tok.miss{background:var(--bad-soft);color:var(--bad)}
+.gd .fix{margin-top:8px}
+
+/* writing */
+.chart svg{width:100%;height:auto}
+textarea{width:100%;min-height:260px;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg);line-height:1.6}
+.wc{font-variant-numeric:tabular-nums;font-weight:700}
+.phr{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px}
+.phr button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px}
+.phr button small{display:block;color:var(--muted)}
+.check label{display:flex;gap:8px;align-items:flex-start;padding:4px 0}
+.plan4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.plan4 textarea{min-height:90px}
+
+/* progress */
+.prog td,.prog th{text-align:center!important}
+.prog td:first-child,.prog th:first-child{text-align:left!important}
+.cellp{display:inline-block;min-width:52px;border-radius:6px;padding:2px 6px;font-weight:700;font-variant-numeric:tabular-nums}
+.p-hi{background:var(--good-soft);color:var(--good)}.p-mid{background:var(--gold-soft);color:var(--gold)}.p-lo{background:var(--bad-soft);color:var(--bad)}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 18px;border-radius:999px;z-index:60;font-weight:700}
+footer{color:var(--muted);font-size:.85rem;padding:20px 0 40px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{header,#scoreboard,.tnote,.sub,.btn,footer{display:none!important}body{background:#fff}}
+
+/* larger game display for the projector */
+.present-btn{margin-left:auto}
+.jcat{font-size:1.15rem;min-height:70px}
+.jcell{font-size:2.3rem;min-height:92px}
+.modal .box{max-width:980px}
+.modal .q{font-size:2.2rem;line-height:1.3}
+.modal .a{font-size:2rem}
+.modal .timer .t{font-size:2.4rem}
+.bigcard .w{font-size:3.6rem}
+.gclue{font-size:2.3rem;margin:18px 0;line-height:1.3}
+.bigcard .timer .t{font-size:2.6rem}
+.bigcard .btn{font-size:1.15rem;padding:12px 22px}
+.taboo-list li{font-size:1.5rem;padding:8px}
+.cw .c{width:42px;height:42px}
+.cw .c input{font-size:1.3rem}
+.cw .c sup{font-size:.7rem}
+.clues{font-size:1.12rem}
+.ws button{width:42px;height:42px;font-size:1.15rem}
+.wlist span{font-size:1.1rem;padding:4px 12px}
+.tile{width:64px;height:70px;font-size:2.1rem}
+.answer-line{font-size:2.6rem;min-height:72px}
+.whoclues{font-size:1.6rem!important;line-height:1.5}
+.whoclues li{margin:10px 0!important}
+.cue h4{font-size:1.6rem}
+.cue{font-size:1.2rem}
+.wheel-out h3{font-size:2rem!important;line-height:1.3}
+.wheel-out .timer .t{font-size:2.4rem}
+#exit-present{position:fixed;bottom:14px;right:14px;z-index:40;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+html.present .top,html.present .units,html.present nav.tabs,html.present .tnote,html.present .head,html.present footer,html.present .sub button:not(.present-btn){display:none!important}
+html.present .present-btn{display:none}
+html.present header{position:static;border:0}
+html.present main{max-width:none;padding:16px 28px 30px}
+html.present body{font-size:20px}
+html.present .jcell{min-height:110px;font-size:2.8rem}
+html.present .jcat{font-size:1.35rem}
+html.present .cw .c{width:48px;height:48px}
+html.present .ws button{width:48px;height:48px;font-size:1.3rem}
+html.present .sub{margin:0}
+
+/* ---- v3 additions ---- */
+:root{--violet:#6d28d9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--violet:#c4b5fd}}
+:root[data-theme="dark"]{--violet:#c4b5fd}
+.author{color:var(--violet);font-weight:800}
+.small{font-size:.88rem}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.howto{background:var(--tint);border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:12px}
+.howto ol{margin:6px 0 0;padding-left:22px}
+.howto li{margin:2px 0}
+/* reorder matching */
+.mgrid{display:grid;grid-template-columns:minmax(150px,1fr) minmax(220px,1.6fr);gap:8px;align-items:stretch}
+.mleft{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-weight:700;background:var(--surface)}
+.mitem{display:flex;align-items:center;gap:10px;border:1px dashed var(--accent);border-radius:10px;padding:8px 10px;background:var(--bg);cursor:grab}
+.mitem.dragging{opacity:.45}
+.mitem.over{box-shadow:0 0 0 3px var(--gold)}
+.mitem .grip{color:var(--muted);font-weight:800;letter-spacing:-2px}
+.mitem .mtext{flex:1}
+.mitem .arrows{display:flex;gap:4px}
+.mitem .arrows button{border:1px solid var(--line);background:var(--surface);border-radius:6px;width:32px;height:30px}
+.mitem .arrows button:disabled{opacity:.3}
+.mleft.good,.mitem.good{background:var(--good-soft);border-color:var(--good);border-style:solid}
+.mleft.bad,.mitem.bad{background:var(--bad-soft);border-color:var(--bad);border-style:solid}
+@media (max-width:640px){.mgrid{grid-template-columns:1fr}}
+/* print bar */
+.printbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
+/* listening */
+.transcript{border-top:1px solid var(--line);padding-top:8px;max-height:300px;overflow:auto}
+.transcript p{margin:0 0 8px}
+.seg.cur{background:var(--gold-soft);border-radius:4px}
+.flow{display:flex;flex-direction:column;align-items:stretch;max-width:620px}
+.fbox{border:2px solid var(--accent);border-radius:12px;padding:10px 14px;background:var(--surface);line-height:2.4}
+.fbox>*{margin-right:6px}
+.fbox input{border:1px solid var(--line);border-radius:8px;padding:6px 10px;width:140px;background:var(--bg)}
+.farrow{text-align:center;font-size:1.4rem;color:var(--accent);line-height:1.2}
+.notes{border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:var(--bg)}
+.notes-title{font-size:1.2rem;margin:0 0 4px;text-align:center}
+.nhead{font-weight:800;color:var(--accent);margin-top:10px}
+.nline{display:block;border-bottom:0;padding:2px 0 2px 14px;line-height:2.4}
+.nline>*{margin-right:6px}
+audio{width:100%}
+/* writing */
+.skills ul,.langbox ul{margin:6px 0 0;padding-left:20px}
+.taskbox{border:2px solid var(--gold);border-radius:12px;padding:12px 16px;background:var(--gold-soft)}
+.taskbox p{margin:6px 0 0;font-style:italic;font-weight:700}
+.langbox{border-left:4px solid var(--accent);background:var(--tint);border-radius:8px;padding:10px 14px}
+.figtitle{font-weight:700;margin:0 0 6px}
+.process{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;counter-reset:s}
+.pstep{position:relative;display:flex;gap:10px;align-items:flex-start;border:2px solid var(--accent);border-radius:12px;padding:12px;background:var(--surface);min-height:96px}
+.pnum{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:800}
+.pstep:not(:nth-child(3n)):not(:last-child)::after{content:"→";position:absolute;right:-12px;top:40%;font-weight:800;color:var(--gold);font-size:1.2rem}
+@media (max-width:640px){.process{grid-template-columns:1fr}.pstep::after{display:none}}
+.wgrid{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+@media (max-width:900px){.wgrid{grid-template-columns:1fr}}
+/* printing */
+#print-root{display:none}
+@media print{
+  html.printing body>*:not(#print-root){display:none!important}
+  html.printing #print-root{display:block;color:#000;font-size:12pt;line-height:1.5}
+  #print-root h1{font-size:18pt;margin:6px 0}
+  #print-root h2{font-size:13pt;margin:14px 0 4px}
+  .ph-top{display:flex;justify-content:space-between;font-size:9pt;border-bottom:1px solid #999;padding-bottom:4px}
+  .ph-sub,.pi{font-style:italic}
+  .pp{margin:0 0 8px;text-align:justify}
+  .pq{margin:6px 0}
+  .pflow{border:1.5px solid #000;border-radius:8px;padding:6px 10px;margin:0}
+  .parrow{text-align:center;margin:0}
+  .ptask{border:1.5px solid #000;padding:8px 12px;font-style:italic}
+  .plines{height:70px;background:repeating-linear-gradient(#fff 0 22px,#bbb 22px 23px)}
+  .pbreak{break-before:page}
+  #print-root .chart svg{max-width:16cm}
+  #print-root .process{grid-template-columns:repeat(3,1fr)}
+  #print-root .pstep{border-color:#000;min-height:0}
+  #print-root .pnum{background:#000;color:#fff}
+  #print-root .muted{color:#444}
+}
+
+/* references */
+.refs{margin-top:18px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.refs summary{cursor:pointer;padding:9px 16px;font-weight:700;font-size:.92rem;color:var(--muted);list-style:none}
+.refs summary::-webkit-details-marker{display:none}
+.refs summary::before{content:"▸ "}
+.refs[open] summary::before{content:"▾ "}
+.refbody{padding:0 18px 14px;font-size:.9rem;line-height:1.55}
+.refbody ol{padding-left:22px;margin:6px 0 10px}
+.refbody li{margin:4px 0;overflow-wrap:anywhere}
+.refbody h4{margin:14px 0 4px;font-size:1rem}
+.rnote{color:var(--muted)}
+#print-root .prefs{margin-top:22px;border-top:1.5px solid #000;padding-top:8px;font-size:8.5pt;line-height:1.4;break-inside:avoid}
+#print-root .prefs h3{font-size:10pt;margin:0 0 4px}
+#print-root .prefs ol{padding-left:18px;margin:4px 0}
+#print-root .prefs li{margin:2px 0;overflow-wrap:anywhere}
+#print-root .rnote{color:#444}
+
+/* writing checker */
+.wcheck{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--bg)}
+.wcheck h4{margin:14px 0 6px;font-size:1.02rem}
+.wc-note{font-size:.88rem;color:var(--muted);border-left:3px solid var(--gold);padding-left:10px}
+.wc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.wc-list li{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;border-radius:8px;font-size:.95rem}
+.wc-list li.wc-ok{background:var(--good-soft)}
+.wc-list li.wc-no{background:var(--bad-soft)}
+.wc-ic{flex:0 0 22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;background:var(--surface)}
+.wc-ok .wc-ic{color:var(--good)}.wc-no .wc-ic{color:var(--bad)}
+p.wc-ok{color:var(--good);font-weight:700;margin:0}
+.wc-ex{margin-top:4px;font-style:italic;color:var(--muted)}
+.wc-ex mark{background:var(--gold-soft);color:var(--ink);font-style:normal;font-weight:700;border-radius:3px;padding:0 2px}
+
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style id="rta-theme">
+:root{--bg:#effafb;--surface:#ffffff;--ink:#0d2b2f;--muted:#4f6e72;--line:#cbe8eb;--accent:#00838f;--accent-ink:#ffffff;--gold:#e0a800;--gold-soft:#fff3cc;--tint:#d6f0f2;--display:'Nunito',system-ui,sans-serif;--body:'Nunito',system-ui,sans-serif;--arabic:'Cairo','Segoe UI',Tahoma,sans-serif;--r:12px;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1d23;--surface:#0f2b34;--ink:#eef1f4;--muted:#a7b1bb;--line:#204752;--accent:#59aeb6;--accent-ink:#0b0f14;--gold:#e6b933;--gold-soft:#463c18;--tint:#0d3841;}}
+:root[data-theme="dark"]{--bg:#0a1d23;--surface:#0f2b34;--ink:#eef1f4;--muted:#a7b1bb;--line:#204752;--accent:#59aeb6;--accent-ink:#0b0f14;--gold:#e6b933;--gold-soft:#463c18;--tint:#0d3841;}
+.btn,.sub button,.tbtn{border-radius:999px}.unit{border-radius:12px}
+header{background:var(--accent);color:var(--accent-ink);border-bottom:0}.brand h1 span{color:var(--gold-soft)}.brand small{color:inherit;opacity:.8}header .tbtn{background:transparent;color:inherit;border-color:rgba(255,255,255,.4)}header .tbtn[aria-pressed="true"]{background:var(--accent-ink);color:var(--accent)}header .unit{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:inherit}header .unit b{color:inherit;opacity:.75}header .unit[aria-current="true"]{background:var(--surface);color:var(--accent);border-color:var(--surface)}nav.tabs{border-top-color:rgba(255,255,255,.2)}nav.tabs button{color:inherit;opacity:.8}nav.tabs button[aria-current="true"]{color:inherit;opacity:1;border-bottom-color:var(--gold)}header .brand small b.author{color:inherit}
+nav.tabs{gap:2px;padding-top:8px}nav.tabs button{border:1px solid transparent;border-bottom:0;border-radius:12px 12px 0 0}nav.tabs button[aria-current="true"]{background:var(--bg);border-color:var(--line);color:var(--ink);opacity:1}
+.units{display:flex;flex-wrap:wrap}.unit{flex-direction:row;align-items:center;gap:8px;border-radius:999px;padding:6px 14px}
+.card{border-color:transparent;box-shadow:0 10px 30px -16px rgba(0,0,0,.28)}
+body{background:radial-gradient(circle at 1px 1px, #bfe2e5 1.2px, transparent 0) 0 0/22px 22px,#effafb}
+html[data-theme="dark"] body{background-image:none}@media (prefers-color-scheme:dark){html:not([data-theme="light"]) body{background-image:none}}
+@media print{body{background:#fff!important}}
+</style>
+</head>
+<body>
+<header>
+ <div class="wrap">
+  <div class="top">
+   <div class="brand"><h1>Market <span>Companion</span></h1><small>Demo · B1 · Al Asem</small></div>
+   <button class="tbtn" id="btn-sb" type="button" aria-pressed="false">Scoreboard</button>
+   <button class="tbtn" id="btn-big" type="button" aria-pressed="false">Projector</button>
+   <button class="tbtn" id="btn-theme" type="button" aria-pressed="false">Dark</button>
+  </div>
+  <div class="units" id="units"></div>
+ </div>
+ <div class="wrap"><nav class="tabs" id="tabs" aria-label="Sections"></nav></div>
+ <div id="scoreboard" hidden></div>
+ <button id="exit-present" class="btn" type="button" hidden>Exit full screen</button>
+</header>
+<main class="wrap" id="main"></main>
+<footer class="wrap"><b>Market Companion</b>, Al Asem.<br>An enrichment tool. All texts and exercises are original, set in Peru (Latin America), and prepared with AI assistance (Al Asem Researcher &amp; Teacher Assistant). Educational approach: Constructivism.</footer>
+<div id="print-root"></div>
+<script>
+var CFG={"practiceLabel":"Skills Practice","examShort":"Exam-style","lessonMinutes":50,"settingName":"Peru (Latin America)","supportLang":"Spanish","unitWord":"Unit","enrichLine":"This is an enrichment tool that complements the course. All texts, exercises and numbers are original and set in Peru (Latin America); no published coursebook content is reproduced. Numbers in charts are invented for practice.","originLine":"Original material designed by the teacher (Al Asem), prepared with the assistance of an AI writing tool (Al Asem Researcher & Teacher Assistant, powered by Claude) and checked by the designer before classroom use.","printTitle":"Market Companion · Demo · B1","approach":{"name":"Constructivism (Piaget · Bruner)","summary":"Learners build their own understanding through discovery, problem-solving and connecting new ideas to experience."}};
+var UNITS=[{"id":1,"title":"Markets and Food","ar":"Mercados y comida","vocab":[["market","n","a place where people buy and sell food and other things","On Saturdays we buy fruit at the market in Cusco.","mercado",["buy","sell","shop"],"a place where you buy fresh food"],["vendor","n","a person who sells things, often in the street","The vendor gave us a free mango.","vendedor",["sell","person","street"],"a person who sells things"],["fresh","adj","recently picked, caught or made","The fish at the market is fresh every morning.","fresco",["new","old","today"],"new and not old food"],["bargain","v","to talk about a price to make it lower","My grandmother always bargains for potatoes.","regatear",["price","cheap","talk"],"to ask for a lower price"],["stall","n","a small table or shop in a market","Her stall sells colourful corn.","puesto",["table","shop","market"],"a small shop in a market"],["crop","n","a plant that farmers grow for food","Potatoes are an important crop in the Andes.","cultivo",["farm","plant","grow"],"a plant farmers grow to eat"],["harvest","n","the time when farmers collect their crops","The coffee harvest starts in April.","cosecha",["collect","farm","time"],"when farmers collect plants"],["spicy","adj","having a strong, hot taste","This salsa is very spicy.","picante",["hot","pepper","taste"],"food with a hot taste"],["recipe","n","instructions for cooking a dish","My aunt has a secret recipe for tamales.","receta",["cook","dish","steps"],"steps for making food"],["ingredient","n","one of the foods you use to make a dish","Corn is the main ingredient in arepas.","ingrediente",["food","recipe","part"],"a food you put in a dish"],["organic","adj","grown without chemicals","Organic vegetables are popular in big cities.","orgánico",["natural","chemical","grow"],"grown with no chemicals"],["customer","n","a person who buys something","The first customer arrived at six o'clock.","cliente",["buy","shop","person"],"a person who buys things"],["weigh","v","to find out how heavy something is","The vendor weighs the tomatoes on an old scale.","pesar",["heavy","kilo","scale"],"to find how heavy it is"],["local","adj","from the area near you","We prefer local cheese from the mountains.","local",["near","area","here"],"from the place near you"],["traditional","adj","done in the same way for a long time","Ceviche is a traditional dish in Peru.","tradicional",["old","culture","always"],"done the same way for years"]],"colloc":[["do the shopping","hacer las compras","I ___ the shopping on Saturday mornings.","do"],["fresh fruit","fruta fresca","The market sells ___ fruit every day.","fresh"],["good value","buen precio","These avocados are ___ value.","good"],["pay in cash","pagar en efectivo","Most vendors want you to ___ in cash.","pay"],["street food","comida callejera","Empanadas are popular ___ food.","street"],["home-made","casero","She sells ___-made bread.","home"],["try a dish","probar un plato","You should ___ this dish; it is delicious.","try"],["set a price","fijar un precio","Farmers ___ the price early in the morning.","set"]],"errors":[["There is many stalls in the market.","There are many stalls in the market.","Con sustantivos en plural usamos there are."],["How much cost the mangoes?","How much do the mangoes cost?","Las preguntas en presente simple necesitan do / does."],["I buyed some bread yesterday.","I bought some bread yesterday.","Buy es irregular: bought."],["She don't like spicy food.","She doesn't like spicy food.","Con he / she / it usamos doesn't."],["We need some potatos for the soup.","We need some potatoes for the soup.","El plural de potato es potatoes."],["The fruit here is more cheap.","The fruit here is cheaper.","Adjetivos cortos: añadimos -er."]],"reading":{"title":"A Morning at San Pedro Market","paras":["San Pedro Market in Cusco, Peru, opens very early. By seven o'clock, hundreds of vendors are ready at their stalls. Some sell fruit and vegetables, and others sell bread, cheese or flowers.","Many of the vendors are farmers from villages near the city. They bring potatoes, corn and quinoa from the mountains. Peru has thousands of types of potatoes, and you can see many colours at the market.","Visitors love the juice stalls. For a few soles, a vendor makes a large glass of fresh juice in front of you. Local people often eat breakfast at the market before work.","Shopping at the market is different from shopping in a supermarket. Customers talk with the vendors, and some people bargain for a lower price. For many families, the market is also a place to meet friends."],"tfng":[["The market opens late in the morning.","F","Paragraph A: it “opens very early”."],["Some vendors come from villages near Cusco.","T","Paragraph B: “farmers from villages near the city”."],["The market is open on Sundays.","NG","The text does not mention days."],["Juice is made in front of the customer.","T","Paragraph C: “in front of you”."],["Nobody bargains at the market.","F","Paragraph D: “some people bargain”."],["The juice is cheaper than in supermarkets.","NG","Supermarket prices are not mentioned."]],"gaps":[["By seven o'clock, hundreds of ______ are ready.",["vendors"]],["Farmers bring potatoes, corn and ______ from the mountains.",["quinoa"]],["Local people often eat ______ at the market.",["breakfast"]],["For many families, the market is a place to meet ______.",["friends"]]]},"speaking":{"p1":["Do you like going to markets? Why or why not?","Who does the shopping in your family?","What is your favourite street food?","Do you prefer cooking or eating out?","What fruit do you eat most often?"],"p2":{"topic":"Describe a market or shop you like to visit.","bullets":["where it is","what you can buy there","who you go with"],"end":"and explain why you like it."},"p3":["Why do some people prefer markets to supermarkets?","How has shopping changed in your city?","Should schools teach children to cook? Why?"]},"guide":{"aims":"Students learn market and food words, practise there is / there are and question forms, and work out the grammar rule themselves from the reading.","warm":"Market memories: in pairs, students describe the last time they bought food and what was different from a supermarket.","creative":"Design a stall: groups plan a new market stall, decide what to sell, set prices and present why customers will come, using at least six unit words.","home":"Visit or call a local market vendor, ask three questions about their work, and write 80 words.","approach":"Students first find all the there is / there are sentences in the reading and state the rule themselves before Grammar Doctor. The stall-design task is a real problem they solve with the unit language, and the homework is a small investigation of their own community.","plan":[["5 min","Warm-up: Market memories","Teacher Guide"],["10 min","Flashcards: guess the meaning before you flip","Vocabulary"],["15 min","Reading, then find the grammar pattern","Skills Practice"],["8 min","Grammar Doctor","Skills Practice"],["10 min","Creative activity: Design a stall","Teacher Guide"],["2 min","Explain the homework","Teacher Guide"]],"verify":[{"where":"Reading","claim":"San Pedro Market is in Cusco, Peru, and opens early in the morning."},{"where":"Reading","claim":"Peru has thousands of types of potatoes."},{"where":"Vocabulary","claim":"Ceviche is a traditional dish in Peru."}]}}];
+var EXTRA=[{"collocEn":["buy food and things for the home","fruit that was picked recently","worth the money you pay","pay with coins and notes","food you buy and eat in the street","made at home, not in a factory","eat something for the first time","decide how much something costs"],"rulesEn":["Use 'there are' with plural nouns.","Questions in the present simple need do / does.","'Buy' is irregular: buy – bought.","With he / she / it, use doesn't.","Potato → potatoes (add -es).","Short adjectives add -er: cheap → cheaper."],"listening":{"title":"Buying vegetables for a family lunch","type":"sentences","speakers":{"A":"Vendor","B":"Lucía"},"script":[["A","Good morning! What would you like today?"],["B","Good morning. I'm cooking lunch for twelve people on Sunday, so I need a lot of vegetables."],["A","Twelve people! What are you making?"],["B","A big soup. First, I need three kilos of potatoes, please."],["A","The yellow potatoes are very good today. They cost four soles a kilo."],["B","Perfect. And two kilos of carrots."],["A","Here you are. Do you need any onions?"],["B","Yes, but only one kilo. My sister is bringing the corn."],["A","Would you like some fresh herbs? They are free with your order."],["B","Oh, thank you! That's very kind. Can I pay by card?"],["A","Sorry, only cash. There is a bank machine next to the flower stall."],["B","No problem. I'll be back in five minutes."]],"items":[["Lucía is cooking lunch for ______ people.",["twelve","12"]],["She needs three kilos of ______.",["potatoes"]],["The yellow potatoes cost ______ soles a kilo.",["four","4"]],["Her sister is bringing the ______.",["corn"]],["The fresh ______ are free.",["herbs"]],["The bank machine is next to the ______ stall.",["flower"]]]},"writing":{"task":1,"kind":"line","time":20,"words":150,"skills":["describe a line graph","write an overview","use the past simple for trends"],"prompt":"The graph shows the number of visitors to a city market and a supermarket on Saturdays between 2018 and 2024. Summarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.","lang":{"title":"Grammar focus: the past simple for trends","items":["rose / increased / grew","fell / dropped / decreased","stayed the same","a sharp fall / a steady rise"]},"plan":[["Introduction","Paraphrase the task."],["Overview","Main trends of both lines."],["Body 1","The market, with numbers."],["Body 2","The supermarket, with comparisons."]],"remember":["Write an overview.","Use the past simple.","Compare the two lines.","Use numbers from the graph.","Write at least 150 words."],"fig":{"title":"Saturday visitors (hundreds)","labels":["2018","2019","2020","2021","2022","2023","2024"],"series":[["Market",[42,44,30,35,40,46,50]],["Supermarket",[30,33,38,41,43,44,45]]],"unit":""}}}];
+var REF_ACCESSED="Framework sources accessed 2026-11-03.";
+var REF_STATEMENT="All texts, tasks, audio scripts, figures and exercises in Market Companion are original practice materials designed by the teacher for Al Asem and prepared with the assistance of an AI writing tool (Al Asem Researcher & Teacher Assistant, powered by Claude, Anthropic). The designer checks all content before classroom use. No text, task, image or audio is taken from a published coursebook. Real-world facts are listed in each unit's Teacher Guide under 'Before class: facts to check' and must be verified and referenced by the designer. Survey results, percentages and chart data are invented for practice and are not real statistics.";
+var R={"cefr":{"a":"Council of Europe","y":"n.d.","t":"Global scale – Table 1 (CEFR 3.3): Common reference levels","s":"Council of Europe","u":"https://www.coe.int/en/web/common-european-framework-reference-languages/table-1-cefr-3.3-common-reference-levels-global-scale","n":"Targeting the learners' CEFR level."},"ielts_read":{"a":"IELTS","y":"n.d.","t":"IELTS Academic format: Reading","s":"IELTS","u":"https://ielts.org/take-a-test/test-types/ielts-academic-test/ielts-academic-format-reading","n":"Question types adapted: True / False / Not Given and sentence completion."},"ielts_listen":{"a":"IELTS","y":"n.d.","t":"IELTS Academic format: Listening","s":"IELTS","u":"https://ielts.org/take-a-test/test-types/ielts-academic-test/ielts-academic-format-listening","n":"Question types adapted: sentence, note and flow-chart completion."},"ielts_org":{"a":"IELTS","y":"n.d.","t":"IELTS Academic test","s":"IELTS","u":"https://ielts.org/organisations/ielts-for-organisations/test-types/ielts-academic-test","n":"Writing and Speaking task formats adapted."},"bc_format":{"a":"British Council","y":"n.d.","t":"IELTS test format","s":"British Council","u":"https://takeielts.britishcouncil.org/take-ielts/test-format","n":"Writing Task 1 and Task 2 task types adapted."}};
+var UREFS=[{"vocab":[],"reading":[],"listening":[],"writing":[]}];
+var SECREFS={"guide":["cefr"],"vocab":["cefr"],"colloc":["cefr"],"games":["ielts_org"],"puzzles":["cefr"],"reading":["ielts_read"],"grammar":["cefr"],"listening":["ielts_listen"],"writing":["ielts_org","bc_format"]};
+var SECNOTE={"vocab":"Definitions, example sentences, meanings and clues are original.","colloc":"All sentences and meanings are original.","games":"All game questions come from the unit's original vocabulary, collocations, grammar and speaking questions.","puzzles":"All puzzles are generated from the unit's original vocabulary and clues.","reading":"The reading text and questions are original. Real-world facts are listed in the Teacher Guide for checking. Survey results and percentages are invented for practice.","grammar":"All sentences and rule explanations are original.","listening":"The audio script and questions are original. People, prices and events are invented unless listed in the Teacher Guide for checking.","writing":"The task, figure and plan are original. All chart data are invented for practice and are not real statistics."};
+
+</script>
+<script>
+(function(){
+"use strict";
+/* ---------- helpers ---------- */
+function el(tag, attrs, kids){
+  var n=document.createElement(tag);
+  if(attrs){for(var k in attrs){var v=attrs[k];
+    if(v==null||v===false) continue;
+    if(k==="class") n.className=v;
+    else if(k==="html") n.innerHTML=v;
+    else if(k==="text") n.textContent=v;
+    else if(k.slice(0,2)==="on") n.addEventListener(k.slice(2),v);
+    else n.setAttribute(k,v===true?"":v);}}
+  if(kids!=null){(Array.isArray(kids)?kids:[kids]).forEach(function(c){
+    if(c==null||c===false) return; n.appendChild(typeof c==="string"||typeof c==="number"?document.createTextNode(String(c)):c);});}
+  return n;
+}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+function norm(s){return String(s).toLowerCase().replace(/[’']/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();}
+function normAns(s){return norm(s).replace(/^(the|a|an) /,"");}
+function scramble(w){var s=w;for(var k=0;k<20&&s===w;k++){s=shuffle(w.split("")).join("");}return s.toUpperCase();}
+function stemRe(w){var s=w;if(s.length>4&&/[ey]$/.test(s)) s=s.slice(0,-1);return new RegExp("\\b"+s+"\\w*","i");}
+function blankWord(ex,w){return ex.replace(stemRe(w),"_____");}
+var POS={n:"noun",v:"verb",adj:"adjective",adv:"adverb"};
+function article(p){return /^[aeiou]/.test(p)?"an":"a";}
+function toast(msg){var t=el("div",{class:"toast",role:"status"},msg);document.body.appendChild(t);setTimeout(function(){t.remove();},1800);}
+function speak(w){try{var u=new SpeechSynthesisUtterance(w);u.lang="en-GB";u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){toast("Audio is not available in this browser.");}}
+
+/* storage (optional convenience) */
+var store={get:function(k,d){try{var v=localStorage.getItem("mc_"+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+  set:function(k,v){try{localStorage.setItem("mc_"+k,JSON.stringify(v));}catch(e){}}};
+function record(act,score,max){var key="u"+U().id+":"+act;var p=store.get("progress",{});var pct=Math.round(score/max*100);
+  if(!(key in p)||pct>p[key]) p[key]=pct; store.set("progress",p);}
+
+/* ---------- state ---------- */
+var S={u:0,sec:"guide",sub:{}};
+var timers=[];
+function clearTimers(){timers.forEach(function(t){t.stop();});timers=[];}
+function U(){return UNITS[S.u];}
+
+/* ---------- timer component ---------- */
+function Timer(sec,onEnd){
+  var left=sec,id=null,box=el("span",{class:"timer"}),t=el("span",{class:"t"}),
+      start=el("button",{class:"btn small",type:"button"},"Start"),reset=el("button",{class:"btn small ghost",type:"button"},"Reset");
+  function fmt(){var m=Math.floor(left/60),s=left%60;t.textContent=m+":"+(s<10?"0":"")+s;box.classList.toggle("low",left<=10&&left>0||left===0);}
+  function stop(){if(id){clearInterval(id);id=null;}start.textContent=left>0?"Start":"Done";}
+  function go(){if(id){stop();start.textContent="Resume";return;}if(left<=0) return;start.textContent="Pause";
+    id=setInterval(function(){left--;fmt();if(left<=0){stop();if(onEnd) onEnd();}},1000);}
+  start.onclick=go;reset.onclick=function(){stop();left=sec;fmt();start.textContent="Start";};
+  fmt();box.append(t,start,reset);
+  var api={node:box,stop:stop,start:function(){if(!id) go();},set:function(s){stop();sec=s;left=s;fmt();start.textContent="Start";}};
+  timers.push(api);return api;
+}
+
+/* ---------- modal ---------- */
+function modal(content,onClose){
+  var m=el("div",{class:"modal",role:"dialog","aria-modal":"true"});
+  var box=el("div",{class:"box"});m.appendChild(box);box.appendChild(content);
+  function close(){m.remove();document.removeEventListener("keydown",key);if(onClose) onClose();}
+  function key(e){if(e.key==="Escape") close();}
+  m.addEventListener("click",function(e){if(e.target===m) close();});
+  document.addEventListener("keydown",key);
+  document.body.appendChild(m);var f=box.querySelector("button");if(f) f.focus();
+  return close;
+}
+
+/* ---------- teacher note ---------- */
+function tnote(title,html){return el("details",{class:"tnote"},[el("summary",null,"Teacher notes: "+title),el("div",{class:"tbody",html:html})]);}
+
+/* ---------- scoreboard ---------- */
+var teams=store.get("teams",[{n:"Team A",p:0},{n:"Team B",p:0},{n:"Team C",p:0}]);
+var turn=0, sbOn=false;
+function saveTeams(){store.set("teams",teams);}
+function renderSB(){
+  var sb=document.getElementById("scoreboard");sb.innerHTML="";sb.hidden=!sbOn;if(!sbOn) return;
+  var w=el("div",{class:"wrap"});
+  w.appendChild(el("b",null,"Scores"));
+  teams.forEach(function(t,i){
+    var inp=el("input",{id:"team-"+i,value:t.n,"aria-label":"Team name",oninput:function(){t.n=inp.value;saveTeams();}});
+    w.appendChild(el("div",{class:"team"+(i===turn?" turn":"")},[inp,
+      el("button",{type:"button","aria-label":"Minus one",onclick:function(){t.p--;saveTeams();renderSB();}},"−"),
+      el("span",{class:"pts"},t.p),
+      el("button",{type:"button","aria-label":"Plus one",onclick:function(){t.p++;saveTeams();renderSB();}},"+")]));
+  });
+  w.appendChild(el("button",{class:"tbtn",type:"button",onclick:function(){if(teams.length<5){teams.push({n:"Team "+String.fromCharCode(65+teams.length),p:0});saveTeams();renderSB();}}},"Add team"));
+  w.appendChild(el("button",{class:"tbtn",type:"button",onclick:function(){teams.forEach(function(t){t.p=0;});saveTeams();renderSB();}},"Reset scores"));
+  if(teams.length>2) w.appendChild(el("button",{class:"tbtn",type:"button",onclick:function(){teams.pop();if(turn>=teams.length) turn=0;saveTeams();renderSB();}},"Remove team"));
+  sb.appendChild(w);
+}
+function award(i,pts){teams[i].p+=pts;saveTeams();renderSB();toast(teams[i].n+" +"+pts);}
+function awardRow(pts,after){
+  var r=el("div",{class:"row"},[el("span",{class:"muted"},"Give "+pts+" to:")]);
+  teams.forEach(function(t,i){r.appendChild(el("button",{class:"btn small gold",type:"button",onclick:function(){award(i,pts);if(after) after();}},t.n));});
+  r.appendChild(el("button",{class:"btn small ghost",type:"button",onclick:function(){if(after) after();}},"Nobody"));
+  return r;
+}
+function nextTurn(){turn=(turn+1)%teams.length;renderSB();}
+
+/* ---------- sections ---------- */
+var SECTIONS=[
+ {id:"guide",label:"Teacher Guide"},
+ {id:"vocab",label:"Vocabulary"},
+ {id:"colloc",label:"Collocations"},
+ {id:"games",label:"Class Games"},
+ {id:"puzzles",label:"Puzzles"},
+ {id:"ielts",label:CFG.practiceLabel},
+ {id:"writing",label:"Writing"},
+ {id:"progress",label:"Progress"}
+];
+function subTabs(sec,list){
+  var cur=S.sub[sec]||list[0][0];
+  var bar=el("div",{class:"sub",role:"tablist"});
+  list.forEach(function(it){bar.appendChild(el("button",{type:"button","aria-current":cur===it[0]?"true":"false",onclick:function(){S.sub[sec]=it[0];render();}},it[1]));});
+  return {bar:bar,cur:cur};
+}
+
+/* ===== Present mode ===== */
+function setPresent(on){
+  document.documentElement.classList.toggle("present",on);
+  var x=document.getElementById("exit-present");if(x) x.hidden=!on;
+  try{if(on&&document.documentElement.requestFullscreen&&!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+      if(!on&&document.fullscreenElement) document.exitFullscreen().catch(function(){});}catch(e){}
+  window.scrollTo(0,0);
+}
+function presentBtn(){return el("button",{class:"btn gold present-btn",type:"button",onclick:function(){setPresent(true);}},"Present (full screen)");}
+
+/* ===== Teacher Guide ===== */
+function viewGuide(m){
+  var u=U(),g=u.guide;
+  m.appendChild(el("div",{class:"grid2"},[
+    el("div",{class:"card guide stack"},[
+      el("h3",null,"Unit aims"),el("p",null,g.aims),
+      el("h3",null,"Warm-up"),el("p",null,g.warm),
+      el("h3",null,"Creative activity"),el("p",null,g.creative),
+      el("h3",null,"Homework"),el("p",null,g.home)
+    ]),
+    el("div",{class:"card stack"},[
+      el("h3",null,"Suggested "+(CFG.lessonMinutes||50)+"-minute lesson"),
+      el("div",{class:"tblwrap"},el("table",{class:"plan"},(g.plan&&g.plan.length)?[el("tr",null,[el("th",null,"Time"),el("th",null,"Activity"),el("th",null,"Tab in the tool")])].concat(g.plan.map(function(r){return planRow(r[0],r[1],r[2]);})):[
+        el("tr",null,[el("th",null,"Time"),el("th",null,"Activity"),el("th",null,"Tab in the tool")]),
+        planRow("5 min","Warm-up: "+g.warm.split(":")[0],"Teacher Guide"),
+        planRow("10 min","Present the words with flashcards, then the word list","Vocabulary"),
+        planRow("10 min","Team game (Jeopardy or Word Race)","Class Games"),
+        planRow("15 min",CFG.examShort+" reading or listening, then Grammar Doctor","Reading & Grammar / Listening"),
+        planRow("8 min","Creative activity or the Speaking Wheel","Teacher Guide / Class Games"),
+        planRow("2 min","Explain the homework","Teacher Guide")
+      ])),
+      el("h3",null,"Unit at a glance"),
+      el("div",{class:"row"},[el("span",{class:"pill"},u.vocab.length+" words"),el("span",{class:"pill"},u.colloc.length+" collocations"),el("span",{class:"pill"},u.reading.tfng.length+u.reading.gaps.length+" reading questions"),el("span",{class:"pill"},u.errors.length+" grammar fixes"),el("span",{class:"pill"},"1 listening task"),el("span",{class:"pill"},"Writing Task "+E().writing.task)])
+    ])
+  ]));
+  if(CFG.approach){m.appendChild(el("div",{class:"card stack",style:"margin-top:16px;border-left:5px solid var(--gold)"},[
+      el("h3",null,"Educational approach: "+CFG.approach.name),
+      el("p",{class:"muted"},CFG.approach.summary),
+      el("p",{html:"<b>How this unit applies it:</b> "+esc(g.approach||"")})]));}
+  if(g.verify&&g.verify.length){m.appendChild(el("details",{class:"tnote",style:"margin-top:16px"},[el("summary",null,"Before class: facts to check ("+g.verify.length+")"),
+      el("div",{class:"tbody",html:"<p>These real-world facts appear in this unit. Check each one in a reliable source and add the source to your references before classroom use.</p><ul>"+g.verify.map(function(v){return "<li><b>"+esc(v.where||"")+":</b> "+esc(v.claim||"")+"</li>";}).join("")+"</ul>"})]));}
+  m.appendChild(el("details",{class:"tnote",style:"margin-top:16px"},[el("summary",null,"How to use this tool"),
+    el("div",{class:"tbody",html:"<ol>"+
+      "<li>Choose a unit in the top bar, then a section in the tabs below it. Each activity has a <b>Teacher notes</b> box; click it to open or close it.</li>"+
+      "<li><b>Scoreboard</b> shows team scores in every game. You can rename teams and add or remove them.</li>"+
+      "<li><b>Present</b> (in Class Games and Puzzles) hides the menus and shows the game in large text for the projector. Press Esc or click <b>Exit</b> to leave.</li>"+
+      "<li><b>Projector</b> makes all the text bigger. <b>Dark</b> changes the colours.</li>"+
+      "<li><b>Reading</b>, <b>Listening</b> and <b>Writing</b> have print buttons under the page, for class handouts and answer keys.</li>"+
+      "<li>The best score for each activity is saved on this device and shown in <b>Progress</b>.</li>"+
+      "<li>"+CFG.enrichLine+"</li>"+
+      "<li>The file works offline and can be copied to classroom computers.</li></ol>"})]));
+}
+function planRow(a,b,c){return el("tr",null,[el("td",null,a),el("td",null,b),el("td",null,c)]);}
+
+/* ===== Vocabulary ===== */
+function viewVocab(m){
+  var st=subTabs("vocab",[["cards","Flashcards"],["list","Word list"]]);m.appendChild(st.bar);
+  if(st.cur==="list") return vocabList(m);
+  m.appendChild(tnote("Flashcards","<ul><li>Show a card and ask students to say the meaning before you flip it (click the card or press Space).</li><li><b>I know it</b> removes the word. <b>Again</b> sends it to the back, so difficult words come back until students know them.</li><li><b>Listen</b> says the word. <b>"+CFG.supportLang+"</b> shows or hides the "+CFG.supportLang+" meaning.</li><li>Idea: make it a team race. The first team to give the meaning wins a point.</li></ul>"));
+  var u=U(),deck=shuffle(u.vocab.map(function(v,i){return i;})),known=0,firstTry={},showAr=store.get("showAr",true),flipped=false;
+  var wrap=el("div",{class:"flash-wrap"});m.appendChild(wrap);
+  var meter=el("div",{class:"meter"},el("i",{style:"width:0"})),count=el("div",{class:"muted"});
+  var card=el("button",{class:"flash",type:"button","aria-label":"Flip card"}),inner=el("div",{class:"flash-inner"});card.appendChild(inner);
+  var controls=el("div",{class:"row"});
+  wrap.append(meter,count,card,controls);
+  function draw(){
+    inner.innerHTML="";card.classList.remove("flipped");flipped=false;
+    meter.firstChild.style.width=(known/u.vocab.length*100)+"%";
+    count.textContent=known+" of "+u.vocab.length+" learned";
+    if(!deck.length){
+      var first=Object.keys(firstTry).filter(function(k){return firstTry[k];}).length;
+      record("flash",first,u.vocab.length);
+      inner.appendChild(el("div",{class:"face front"},[el("div",{class:"word"},"Well done!"),el("p",null,"You learned all "+u.vocab.length+" words. "+first+" were correct the first time."),
+        el("button",{class:"btn",type:"button",onclick:function(e){e.stopPropagation();render();}},"Start again")]));
+      controls.innerHTML="";return;}
+    var v=u.vocab[deck[0]];
+    inner.append(el("div",{class:"face front"},[el("span",{class:"pill"},POS[v[1]]),el("div",{class:"word"},v[0]),el("div",{class:"muted"},"Click to see the meaning")]),
+      el("div",{class:"face back"},[el("div",{class:"def"},v[2]),el("div",{class:"ex"},"“"+v[3]+"”"),showAr?el("div",{class:"arw"},v[4]):null]));
+    controls.innerHTML="";
+    controls.append(
+      el("button",{class:"btn ghost",type:"button",onclick:function(){speak(v[0]);}},"Listen"),
+      el("button",{class:"btn ghost",type:"button","aria-pressed":showAr?"true":"false",onclick:function(){showAr=!showAr;store.set("showAr",showAr);draw();}},CFG.supportLang+": "+(showAr?"on":"off")),
+      el("button",{class:"btn gold",type:"button",onclick:function(){if(!(deck[0] in firstTry)) firstTry[deck[0]]=false;deck.push(deck.shift());draw();}},"Again"),
+      el("button",{class:"btn",type:"button",onclick:function(){if(!(deck[0] in firstTry)) firstTry[deck[0]]=true;deck.shift();known++;draw();}},"I know it"),
+      el("button",{class:"btn ghost",type:"button",onclick:function(){deck=shuffle(deck);draw();}},"Shuffle"));
+  }
+  card.onclick=function(){if(!deck.length) return;flipped=!flipped;card.classList.toggle("flipped",flipped);};
+  card.onkeydown=function(e){if(e.key===" "){e.preventDefault();card.click();}};
+  draw();
+}
+function vocabList(m){
+  m.appendChild(tnote("Word list","<ul><li>The full list for printing or quick review. Ctrl+P prints the table without the buttons.</li><li>Idea: each student chooses three words and writes a new sentence about "+CFG.settingName+" with each one.</li></ul>"));
+  var u=U(),t=el("table",{class:"list"},[el("tr",null,["Word","Type","Meaning","Example",CFG.supportLang,""].map(function(h){return el("th",null,h);}))]);
+  u.vocab.forEach(function(v){t.appendChild(el("tr",null,[el("td",null,el("b",null,v[0])),el("td",{class:"muted"},POS[v[1]]),el("td",null,v[2]),el("td",null,el("i",null,v[3])),el("td",{class:"ar"},v[4]),
+    el("td",null,el("button",{class:"btn small ghost",type:"button",onclick:function(){speak(v[0]);}},"Listen"))]));});
+  m.appendChild(el("div",{class:"card tblwrap"},t));
+}
+
+/* ===== Collocations ===== */
+function E(){return EXTRA[S.u];}
+function howTo(steps){return el("div",{class:"howto"},[el("b",null,"How to answer"),el("ol",null,steps.map(function(s){return el("li",{html:s});}))]);}
+function viewColloc(m){
+  var st=subTabs("colloc",[["match","Match the meaning"],["gap","Complete the sentence"]]);m.appendChild(st.bar);
+  var u=U(),en=E().collocEn;
+  if(st.cur==="match"){
+    m.appendChild(tnote("Match the meaning","<ul><li>The collocations on the left stay in place. Students move the meanings on the right up or down until each meaning is next to its collocation.</li><li>Students can drag a meaning with the mouse or a finger, or use the ▲ ▼ buttons. Then they click <b>Check</b>: correct rows turn green and wrong rows turn orange.</li><li>Good for pairs: one student moves, the other explains why.</li></ul>"));
+    var order=shuffle(u.colloc.map(function(c,i){return i;})),checked=false,dragFrom=null,tries=0;
+    var grid=el("div",{class:"mgrid"}),status=el("p",{class:"scorebig"});
+    function move(from,to){if(to<0||to>=order.length) return;var x=order.splice(from,1)[0];order.splice(to,0,x);checked=false;draw();}
+    function draw(){grid.innerHTML="";
+      u.colloc.forEach(function(c,row){
+        var mi=order[row],ok=checked?mi===row:null;
+        var item=el("div",{class:"mitem"+(ok===true?" good":ok===false?" bad":""),draggable:"true","aria-label":"Meaning: "+en[mi]},[
+          el("span",{class:"grip","aria-hidden":"true"},"⋮⋮"),el("span",{class:"mtext"},en[mi]),
+          el("span",{class:"arrows"},[el("button",{type:"button","aria-label":"Move up",disabled:row===0?true:null,onclick:function(){move(row,row-1);}},"▲"),
+            el("button",{type:"button","aria-label":"Move down",disabled:row===order.length-1?true:null,onclick:function(){move(row,row+1);}},"▼")])]);
+        item.addEventListener("dragstart",function(e){dragFrom=row;item.classList.add("dragging");try{e.dataTransfer.setData("text/plain",String(row));e.dataTransfer.effectAllowed="move";}catch(err){}});
+        item.addEventListener("dragend",function(){item.classList.remove("dragging");});
+        item.addEventListener("dragover",function(e){e.preventDefault();item.classList.add("over");});
+        item.addEventListener("dragleave",function(){item.classList.remove("over");});
+        item.addEventListener("drop",function(e){e.preventDefault();item.classList.remove("over");if(dragFrom!=null&&dragFrom!==row) move(dragFrom,row);dragFrom=null;});
+        grid.append(el("div",{class:"mleft"+(ok===true?" good":ok===false?" bad":"")},[el("b",null,(row+1)+"."),c[0]]),item);
+      });}
+    draw();
+    m.appendChild(el("div",{class:"card stack"},[
+      howTo(["Read the collocations on the left. They do not move.","Move each meaning on the right <b>up or down</b>: drag it, or click ▲ / ▼.","Put each meaning next to the right collocation.","Click <b>Check</b>. Green = correct, orange = try again."]),
+      grid,
+      el("div",{class:"row"},[el("button",{class:"btn",type:"button",onclick:function(){checked=true;tries++;draw();var n=order.filter(function(x,i){return x===i;}).length;
+          status.textContent=n+" / "+order.length+" correct"+(n===order.length?" · Well done!":"");if(tries===1) record("colloc",n,order.length);}},"Check"),
+        el("button",{class:"btn ghost",type:"button",onclick:function(){order=u.colloc.map(function(c,i){return i;});checked=true;draw();status.textContent="Answers shown";}},"Show answers"),
+        el("button",{class:"btn ghost",type:"button",onclick:render},"New order"),status])]));
+  } else {
+    m.appendChild(tnote("Complete the sentence","<ul><li>Students type the missing word in each sentence, then click <b>Check</b>.</li><li>The full collocation and its English meaning appear after checking.</li><li>Some sentences need a different verb form (e.g. <i>had</i> for <i>have</i>), which is a chance to review grammar.</li></ul>"));
+    var box=el("div",{class:"card"}),ins=[];
+    box.appendChild(howTo(["Read each sentence.","Type <b>one word</b> in the gap.","Click <b>Check</b> to see your score and the meanings."]));
+    u.colloc.forEach(function(c,i){var parts=c[2].split("___");var inp=el("input",{id:"cg-"+i,"aria-label":"Missing word "+(i+1),autocomplete:"off"});ins.push(inp);
+      var fb=el("span",{class:"fb"});inp._fb=fb;
+      box.appendChild(el("div",{class:"qline"},[el("b",null,(i+1)+"."),el("span",null,parts[0]),inp,el("span",null,parts[1]),fb]));});
+    var res=el("p",{class:"scorebig"});
+    box.appendChild(el("div",{class:"row",style:"margin-top:12px"},[el("button",{class:"btn",type:"button",onclick:function(){var sc=0;
+      ins.forEach(function(inp,i){var c=u.colloc[i];var ok=normAns(inp.value)===normAns(c[3]);if(ok) sc++;inp.className=ok?"ok":"no";
+        inp._fb.innerHTML=(ok?"<span class='ok'>Correct</span>":"<span class='no'>Answer: "+esc(c[3])+"</span>")+" · <b>"+esc(c[0])+"</b> = "+esc(en[i]);});
+      res.textContent=sc+" / "+u.colloc.length;record("collocgap",sc,u.colloc.length);}},"Check"),
+      el("button",{class:"btn ghost",type:"button",onclick:render},"Clear"),res]));
+    m.appendChild(box);
+  }
+}
+
+/* ===== Games ===== */
+function viewGames(m){
+  var st=subTabs("games",[["jeopardy","Jeopardy"],["wheel","Speaking Wheel"],["race","Word Race"],["taboo","Taboo"]]);st.bar.appendChild(presentBtn());m.appendChild(st.bar);
+  ({jeopardy:jeopardy,wheel:wheel,race:race,taboo:taboo})[st.cur](m);
+}
+function jeopardy(m){
+  m.appendChild(tnote("Jeopardy","<ol><li>Turn on the <b>Scoreboard</b> at the top and put the class into teams.</li><li>A team chooses a category and a value (100 = easy, 400 = harder). The question opens with a 30-second timer.</li><li>Click <b>Show answer</b>, then give the points. If a team is wrong, another team can steal.</li><li><b>Speak!</b>: the student talks for 30 seconds and you decide the points.</li><li><b>New board</b> makes a new board with different questions from the same unit.</li></ol>"));
+  var u=U(),vs=shuffle(u.vocab).sort(function(a,b){return a[0].length-b[0].length;}),cs=shuffle(u.colloc),es=shuffle(u.errors),sp=shuffle(u.speaking.p1.concat(u.speaking.p3));
+  var v1=vs.filter(function(x,i){return i%2===0;}).slice(0,4),v2=vs.filter(function(x,i){return i%2===1;}).slice(0,4);
+  v1=shuffle(v1).sort(function(a,b){return a[2].length-b[2].length;});
+  var cats=[
+    {n:"What's the Word?",q:v1.map(function(v){return {q:"What is the word? “"+v[6]+"”",a:v[0]};})},
+    {n:"Collocations",q:cs.slice(0,4).map(function(c){return {q:"Complete: "+c[2],a:c[3]+"  ("+c[0]+")"};})},
+    {n:"Grammar Doctor",q:es.slice(0,4).map(function(e){return {q:"Fix the mistake: “"+e[0]+"”",a:e[1]};})},
+    {n:"Unscramble",q:v2.map(function(v){return {q:"Make the word: "+scramble(v[0])+"  ·  Clue: "+v[6],a:v[0]};})},
+    {n:"Speak!",q:sp.slice(0,4).map(function(s){return {q:"Speak for 30 seconds: "+s,a:"Teacher decides: give points for a full answer with a reason and an example."};})}
+  ];
+  var board=el("div",{class:"jboard"});
+  cats.forEach(function(c){board.appendChild(el("div",{class:"jcat"},c.n));});
+  for(var r=0;r<4;r++){cats.forEach(function(c){(function(q,val){
+    var b=el("button",{class:"jcell",type:"button"},String(val));
+    b.onclick=function(){if(b.classList.contains("used")) return;
+      var ans=el("div",{class:"a",hidden:true},q.a),t=Timer(30),close;
+      var cont=el("div",null,[el("span",{class:"pill"},c.n+" · "+val),el("div",{class:"q"},q.q),t.node,el("div",{style:"height:14px"}),ans,
+        el("div",{class:"row"},[el("button",{class:"btn",type:"button",onclick:function(e){ans.hidden=false;e.target.remove();}},"Show answer")]),
+        el("div",{style:"height:12px"}),awardRow(val/100,function(){close();})]);
+      close=modal(cont,function(){t.stop();b.classList.add("used");b.textContent="";b.setAttribute("aria-label","Used");});
+      t.start();};
+    board.appendChild(b);})(c.q[r],(r+1)*100);});}
+  m.appendChild(el("div",{class:"card"},[el("div",{style:"overflow-x:auto"},board),el("p",{class:"muted"},"Points shown on the board are 100–400; the scoreboard adds 1–4 points."),el("button",{class:"btn ghost",type:"button",onclick:render},"New board")]));
+}
+function wheel(m){
+  m.appendChild(tnote("Speaking Wheel","<ol><li>Click <b>Spin</b>. The wheel chooses a Part 1 or Part 3 speaking question.</li><li>Part 1: a 30-second answer. Part 3: one minute, with a reason and an example.</li><li>The Part 2 cue card has 1 minute to prepare and 2 minutes to speak, like the real test.</li><li>Idea: in pairs, one student speaks while her partner writes down the unit words she uses.</li></ol>"));
+  var u=U(),items=u.speaking.p1.map(function(q){return {p:"Part 1",q:q,t:30};}).concat(u.speaking.p3.map(function(q){return {p:"Part 3",q:q,t:60};}));
+  var N=items.length,cv=el("canvas",{width:420,height:420,"aria-label":"Question wheel"}),ctx=cv.getContext("2d"),rot=0,spinning=false;
+  var cols=["#0d7a72","#c98a00","#13202e","#2b9a8f","#e2b23c","#3d5266","#0f5e58","#a46f00"];
+  function draw(){ctx.clearRect(0,0,420,420);var seg=2*Math.PI/N;
+    for(var i=0;i<N;i++){var a0=rot+i*seg-Math.PI/2;ctx.beginPath();ctx.moveTo(210,210);ctx.arc(210,210,200,a0,a0+seg);ctx.closePath();ctx.fillStyle=cols[i%cols.length];ctx.fill();
+      ctx.save();ctx.translate(210,210);ctx.rotate(a0+seg/2);ctx.fillStyle="#fff";ctx.font="bold 22px sans-serif";ctx.textAlign="right";ctx.fillText((items[i].p==="Part 1"?"P1·":"P3·")+(i+1),185,8);ctx.restore();}
+    ctx.beginPath();ctx.arc(210,210,30,0,2*Math.PI);ctx.fillStyle="#fff";ctx.fill();}
+  draw();
+  var out=el("div",{class:"card stack wheel-out"},[el("h3",null,"Spin to choose a question"),el("p",{class:"muted"},"P1 = Part 1 (30 seconds) · P3 = Part 3 (1 minute)")]);
+  var t=Timer(30);
+  function pick(){var seg=2*Math.PI/N;var a=((-rot)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);var i=Math.floor(a/seg)%N;var it=items[i];
+    out.innerHTML="";t.set(it.t);out.append(el("span",{class:"pill"},it.p+" · Question "+(i+1)),el("h3",null,it.q),t.node,
+      el("p",{class:"muted"},it.p==="Part 1"?"Answer + one reason or detail.":"Give your opinion, a reason and an example."));}
+  var spinBtn=el("button",{class:"btn gold",type:"button",onclick:function(){if(spinning) return;spinning=true;
+    var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var total=(reduce?0:6*Math.PI)+Math.random()*2*Math.PI,start=rot,t0=performance.now(),dur=reduce?10:3200;
+    (function step(now){var k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);rot=start+total*e;draw();if(k<1) requestAnimationFrame(step);else{spinning=false;pick();}})(t0);}},"Spin");
+  var p2=u.speaking.p2,t2=Timer(60,function(){toast("Preparation time is over. Start speaking!");t2.set(120);t2.start();});
+  var cue=el("div",{class:"cue"},[el("span",{class:"pill"},"Part 2 · Cue card"),el("h4",{style:"margin-top:8px"},p2.topic),el("p",{style:"margin:4px 0"},"You should say:"),
+    el("ul",null,p2.bullets.map(function(b){return el("li",null,b);})),el("p",{style:"margin:4px 0"},p2.end),
+    el("p",{class:"muted"},"1 minute to prepare, then 2 minutes to speak. The timer switches automatically."),t2.node]);
+  m.appendChild(el("div",{class:"wheel-area"},[el("div",{class:"stack"},[el("div",{class:"wheel-box"},[el("div",{class:"pointer"}),cv]),spinBtn]),el("div",{class:"stack"},[out,cue])]));
+}
+function race(m){
+  m.appendChild(tnote("Word Race","<ol><li>Turn on the <b>Scoreboard</b>. The team whose turn it is has a gold border.</li><li>A clue appears and the team has 20 seconds to say the word. <b>Hint</b> shows the first letter and the number of letters.</li><li><b>Correct</b> gives 1 point and moves to the next team. <b>Pass</b> gives the same word to the next team to steal.</li><li>One round is 10 words. Idea: the team that wins a word must also spell it aloud.</li></ol>"));
+  var u=U(),q=shuffle(u.vocab).slice(0,10),i=0,card=el("div",{class:"card bigcard"}),t=Timer(20);
+  function show(){card.innerHTML="";
+    if(i>=q.length){card.append(el("div",{class:"w"},"Round over!"),el("p",null,"Check the scoreboard for the winner."),el("button",{class:"btn",type:"button",onclick:render},"New round"));return;}
+    var v=q[i],hint=el("p",{class:"muted",hidden:true},"Starts with “"+v[0][0].toUpperCase()+"” · "+v[0].length+" letters"),ans=el("div",{class:"w",hidden:true},v[0]);
+    t.set(20);
+    card.append(el("span",{class:"pill"},"Word "+(i+1)+" of "+q.length+" · Turn: "+(teams[turn]?teams[turn].n:"")),
+      el("h3",{class:"gclue"},v[6]),el("p",{class:"muted"},"("+POS[v[1]]+")"),hint,ans,t.node,el("div",{style:"height:16px"}),
+      el("div",{class:"row",style:"justify-content:center"},[
+        el("button",{class:"btn ghost",type:"button",onclick:function(){hint.hidden=false;}},"Hint"),
+        el("button",{class:"btn ghost",type:"button",onclick:function(){ans.hidden=false;}},"Show word"),
+        el("button",{class:"btn gold",type:"button",onclick:function(){nextTurn();show();}},"Pass"),
+        el("button",{class:"btn",type:"button",onclick:function(){award(turn,1);nextTurn();i++;show();}},"Correct")]),
+      el("p",null,el("button",{class:"btn small ghost",type:"button",onclick:function(){i++;show();}},"Skip word")));
+    t.start();}
+  show();m.appendChild(card);
+}
+function taboo(m){
+  m.appendChild(tnote("Taboo","<ol><li>One student stands at the front and looks at the card.</li><li>She explains the word to her team in English without saying the word or the three red words.</li><li>The team has 60 seconds to guess as many words as possible. <b>Got it</b> adds a point; <b>Skip</b> moves on.</li><li>At the end of the round, give the points to the team. This is great practice for paraphrasing in the Speaking test.</li></ol>"));
+  var u=U(),deck=shuffle(u.vocab),i=0,got=0,running=false,card=el("div",{class:"card bigcard"});
+  var t=Timer(60,function(){running=false;end();});
+  function end(){card.innerHTML="";card.append(el("div",{class:"w"},"Time!"),el("p",{style:"font-size:1.3rem"},got+" words guessed"),awardRow(got,function(){got=0;start();}),el("div",{style:"height:10px"}),el("button",{class:"btn ghost",type:"button",onclick:function(){got=0;start();}},"Next round"));}
+  function start(){card.innerHTML="";t.set(60);card.append(el("h3",null,"Taboo round"),el("p",{class:"muted"},"Describe the word without saying it or the three red words."),t.node,el("div",{style:"height:12px"}),
+    el("button",{class:"btn gold",type:"button",onclick:function(){running=true;t.start();show();}},"Start round"));}
+  function show(){if(!running) return;card.innerHTML="";if(i>=deck.length){deck=shuffle(u.vocab);i=0;}var v=deck[i];
+    card.append(t.node,el("div",{class:"w",style:"margin-top:14px"},v[0]),el("ul",{class:"taboo-list"},v[5].map(function(x){return el("li",null,x);})),el("p",{class:"muted"},"Round score: "+got),
+      el("div",{class:"row",style:"justify-content:center"},[el("button",{class:"btn ghost",type:"button",onclick:function(){i++;show();}},"Skip"),el("button",{class:"btn",type:"button",onclick:function(){got++;i++;show();}},"Got it")]));}
+  start();m.appendChild(card);
+}
+
+/* ===== Puzzles ===== */
+function viewPuzzles(m){
+  var st=subTabs("puzzles",[["cross","Crossword"],["search","Word Search"],["scramble","Scrambled Words"],["who","Who Am I?"]]);st.bar.appendChild(presentBtn());m.appendChild(st.bar);
+  ({cross:crossword,search:wordsearch,scramble:scrambleGame,who:whoami})[st.cur](m);
+}
+/* crossword generator */
+function makeCrossword(words){
+  var best=null;
+  for(var attempt=0;attempt<300;attempt++){
+    var order=attempt===0?words.slice().sort(function(a,b){return b.length-a.length;}):[words.slice().sort(function(a,b){return b.length-a.length;})[0]].concat(shuffle(words.slice().sort(function(a,b){return b.length-a.length;}).slice(1)));
+    var cells={},placed=[];
+    function key(r,c){return r+","+c;}
+    function get(r,c){return cells[key(r,c)];}
+    function can(w,r,c,d){var dr=d==="down"?1:0,dc=d==="across"?1:0,inter=0;
+      if(get(r-dr,c-dc)||get(r+dr*w.length,c+dc*w.length)) return -1;
+      for(var k=0;k<w.length;k++){var rr=r+dr*k,cc=c+dc*k,cell=get(rr,cc);
+        if(cell){if(cell.ch!==w[k]||cell.dirs.indexOf(d)>=0) return -1;inter++;}
+        else{if(get(rr+dc,cc+dr)||get(rr-dc,cc-dr)) return -1;}}
+      return inter;}
+    function put(w,r,c,d){var dr=d==="down"?1:0,dc=d==="across"?1:0;
+      for(var k=0;k<w.length;k++){var kk=key(r+dr*k,c+dc*k);if(!cells[kk]) cells[kk]={ch:w[k],dirs:[]};cells[kk].dirs.push(d);}
+      placed.push({w:w,r:r,c:c,d:d});}
+    put(order[0],0,0,"across");
+    for(var pass=0;pass<2;pass++){
+      order.slice(1).forEach(function(w){
+        if(placed.some(function(p){return p.w===w;})) return;
+        var opts=[];
+        Object.keys(cells).forEach(function(k){var cell=cells[k],rc=k.split(",").map(Number);
+          for(var i=0;i<w.length;i++){if(w[i]!==cell.ch) continue;
+            var d=cell.dirs.indexOf("across")>=0?"down":"across";
+            var r=d==="down"?rc[0]-i:rc[0],c=d==="across"?rc[1]-i:rc[1];
+            var s=can(w,r,c,d);if(s>0) opts.push({r:r,c:c,d:d,s:s});}});
+        if(opts.length){opts=shuffle(opts).sort(function(a,b){return b.s-a.s;});var o=opts[0];
+          var ks=Object.keys(cells).map(function(k){return k.split(",").map(Number);});
+          var minR=Math.min.apply(null,ks.map(function(x){return x[0];})),maxR=Math.max.apply(null,ks.map(function(x){return x[0];})),
+              minC=Math.min.apply(null,ks.map(function(x){return x[1];})),maxC=Math.max.apply(null,ks.map(function(x){return x[1];}));
+          var er=o.d==="down"?o.r+w.length-1:o.r,ec=o.d==="across"?o.c+w.length-1:o.c;
+          if(Math.max(maxR,er)-Math.min(minR,o.r)<15&&Math.max(maxC,ec)-Math.min(minC,o.c)<15) put(w,o.r,o.c,o.d);}
+      });}
+    var ks2=Object.keys(cells).map(function(k){return k.split(",").map(Number);});
+    var r0=Math.min.apply(null,ks2.map(function(x){return x[0];})),r1=Math.max.apply(null,ks2.map(function(x){return x[0];})),
+        c0=Math.min.apply(null,ks2.map(function(x){return x[1];})),c1=Math.max.apply(null,ks2.map(function(x){return x[1];}));
+    var score=placed.length*1000-(r1-r0+1)*(c1-c0+1);
+    if(!best||score>best.score) best={score:score,placed:placed,r0:r0,c0:c0,rows:r1-r0+1,cols:c1-c0+1};
+  }
+  best.placed.forEach(function(p){p.r-=best.r0;p.c-=best.c0;});
+  best.placed.sort(function(a,b){return a.r-b.r||a.c-b.c;});
+  var num=0,nums={};
+  best.placed.forEach(function(p){var k=p.r+","+p.c;if(!nums[k]) nums[k]=++num;p.n=nums[k];});
+  best.nums=nums;return best;
+}
+function crossword(m){
+  m.appendChild(tnote("Crossword","<ul><li>The grid is made automatically from the unit words, with simple clues. <b>New puzzle</b> makes a new layout.</li><li>Click a square and type; the cursor moves on by itself. <b>Check</b> colours correct letters green and wrong letters orange.</li><li>Press Ctrl+P to print it for pair work.</li></ul>"));
+  var u=U(),words=shuffle(u.vocab).slice(0,10),defs={};words.forEach(function(v){defs[v[0]]=v;});
+  var cw=makeCrossword(words.map(function(v){return v[0];}));
+  var grid=el("div",{class:"cw",style:"grid-template-columns:repeat("+cw.cols+",34px)"}),inputs={},sol={};
+  cw.placed.forEach(function(p){for(var k=0;k<p.w.length;k++){var r=p.d==="down"?p.r+k:p.r,c=p.d==="across"?p.c+k:p.c;sol[r+","+c]=p.w[k];}});
+  var lastDir="across";
+  for(var r=0;r<cw.rows;r++)for(var c=0;c<cw.cols;c++){(function(r,c){var k=r+","+c;
+    if(sol[k]){var inp=el("input",{maxlength:1,"aria-label":"Row "+(r+1)+" column "+(c+1),autocomplete:"off"});inputs[k]=inp;
+      inp.oninput=function(){inp.value=inp.value.replace(/[^a-z]/gi,"").slice(-1).toUpperCase();inp.parentNode.classList.remove("ok","no");
+        if(inp.value){var nk=lastDir==="across"?r+","+(c+1):(r+1)+","+c;if(!inputs[nk]){lastDir=lastDir==="across"?"down":"across";nk=lastDir==="across"?r+","+(c+1):(r+1)+","+c;}if(inputs[nk]) inputs[nk].focus();}};
+      inp.onfocus=function(){var a=inputs[r+","+(c-1)]||inputs[r+","+(c+1)],d=inputs[(r-1)+","+c]||inputs[(r+1)+","+c];if(a&&!d) lastDir="across";else if(d&&!a) lastDir="down";};
+      inp.onkeydown=function(e){var mv={ArrowRight:[0,1],ArrowLeft:[0,-1],ArrowDown:[1,0],ArrowUp:[-1,0]}[e.key];
+        if(mv){var nk=(r+mv[0])+","+(c+mv[1]);if(inputs[nk]){e.preventDefault();inputs[nk].focus();lastDir=mv[0]?"down":"across";}}
+        if(e.key==="Backspace"&&!inp.value){var pk=lastDir==="across"?r+","+(c-1):(r-1)+","+c;if(inputs[pk]){e.preventDefault();inputs[pk].focus();inputs[pk].value="";}}};
+      grid.appendChild(el("div",{class:"c on"},[cw.nums[k]?el("sup",null,cw.nums[k]):null,inp]));}
+    else grid.appendChild(el("div",{class:"c"}));})(r,c);}
+  var across=el("ol"),down=el("ol");
+  cw.placed.forEach(function(p){(p.d==="across"?across:down).appendChild(el("li",null,[el("b",null,p.n),defs[p.w][6]+" ("+p.w.length+")"]));});
+  var res=el("span",{class:"scorebig"});
+  m.appendChild(el("div",{class:"card"},[el("div",{class:"cw-area"},[el("div",{class:"cw-scroll"},grid),el("div",{class:"clues"},[el("h4",null,"Across"),across,el("h4",null,"Down"),down])]),
+    el("div",{class:"row",style:"margin-top:14px"},[
+      el("button",{class:"btn",type:"button",onclick:function(){var ok=0,tot=0;Object.keys(sol).forEach(function(k){tot++;var v=inputs[k].value.toLowerCase();inputs[k].parentNode.classList.remove("ok","no");if(v){inputs[k].parentNode.classList.add(v===sol[k]?"ok":"no");}if(v===sol[k]) ok++;});
+        res.textContent=ok+" / "+tot+" letters";if(ok===tot){res.textContent="Solved!";record("cross",1,1);}}},"Check"),
+      el("button",{class:"btn ghost",type:"button",onclick:function(){Object.keys(sol).forEach(function(k){inputs[k].value=sol[k].toUpperCase();});}},"Reveal"),
+      el("button",{class:"btn ghost",type:"button",onclick:render},"New puzzle"),res]),
+    cw.placed.length<words.length?el("p",{class:"muted"},(words.length-cw.placed.length)+" word(s) did not fit this layout. Click New puzzle for a different one."):null]));
+}
+/* word search */
+function makeSearch(words,N){
+  var dirs=[[0,1],[1,0],[1,1],[-1,1]];
+  for(var attempt=0;attempt<50;attempt++){
+    var g=[],ok=true,pos={};for(var i=0;i<N;i++){g.push(new Array(N).fill(""));}
+    var list=words.slice().sort(function(a,b){return b.length-a.length;});
+    for(var w=0;w<list.length&&ok;w++){var word=list[w].toUpperCase(),placed=false;
+      for(var t=0;t<300&&!placed;t++){var d=dirs[Math.floor(Math.random()*dirs.length)],r=Math.floor(Math.random()*N),c=Math.floor(Math.random()*N);
+        var er=r+d[0]*(word.length-1),ec=c+d[1]*(word.length-1);if(er<0||er>=N||ec<0||ec>=N) continue;
+        var fit=true;for(var k=0;k<word.length;k++){var ch=g[r+d[0]*k][c+d[1]*k];if(ch&&ch!==word[k]){fit=false;break;}}
+        if(!fit) continue;for(k=0;k<word.length;k++) g[r+d[0]*k][c+d[1]*k]=word[k];pos[list[w]]={r:r,c:c,d:d};placed=true;}
+      if(!placed) ok=false;}
+    if(ok){var AB="ABCDEFGHIJKLMNOPRSTUVWY";for(i=0;i<N;i++)for(var j=0;j<N;j++) if(!g[i][j]) g[i][j]=AB[Math.floor(Math.random()*AB.length)];return {g:g,pos:pos};}
+  }
+  return null;
+}
+function wordsearch(m){
+  m.appendChild(tnote("Word Search","<ul><li>Words go across, down and diagonally (left to right).</li><li>Click the first letter of a word, then its last letter. A correct word is highlighted and crossed off the list.</li><li>Challenge: click <b>Hide list</b> and read the clues aloud instead.</li></ul>"));
+  var u=U(),words=shuffle(u.vocab).slice(0,10).map(function(v){return v[0];}),N=Math.max(12,Math.max.apply(null,words.map(function(w){return w.length;}))+1);
+  var ws=makeSearch(words,N);if(!ws){N++;ws=makeSearch(words,N);}
+  var grid=el("div",{class:"ws",style:"grid-template-columns:repeat("+N+",34px)"}),btns=[],first=null,found={};
+  var wl=el("div",{class:"wlist"}),spans={};
+  words.forEach(function(w){spans[w]=el("span",null,w);wl.appendChild(spans[w]);});
+  var defs=el("ol",{hidden:true},shuffle(u.vocab.filter(function(v){return words.indexOf(v[0])>=0;})).map(function(v){return el("li",null,v[6]);}));
+  var status=el("p",{class:"muted"},"0 / "+words.length+" found");
+  for(var r=0;r<N;r++){btns.push([]);for(var c=0;c<N;c++){(function(r,c){var b=el("button",{type:"button","aria-label":"Letter "+ws.g[r][c]+" row "+(r+1)+" column "+(c+1)},ws.g[r][c]);btns[r].push(b);
+    b.onclick=function(){if(!first){first=[r,c];b.classList.add("start");return;}
+      var dr=Math.sign(r-first[0]),dc=Math.sign(c-first[1]),len=Math.max(Math.abs(r-first[0]),Math.abs(c-first[1]))+1;
+      btns[first[0]][first[1]].classList.remove("start");
+      var straight=(r===first[0]||c===first[1]||Math.abs(r-first[0])===Math.abs(c-first[1]));
+      if(straight&&len>1){var s="",cellsL=[];for(var k=0;k<len;k++){var rr=first[0]+dr*k,cc=first[1]+dc*k;s+=ws.g[rr][cc];cellsL.push(btns[rr][cc]);}
+        var rev=s.split("").reverse().join("");
+        words.forEach(function(w){var W=w.toUpperCase();if(!found[w]&&(s===W||rev===W)){found[w]=true;cellsL.forEach(function(x){x.classList.add("found");});spans[w].classList.add("found");}});
+        var n=Object.keys(found).length;status.textContent=n+" / "+words.length+" found";if(n===words.length){status.textContent="All words found!";record("search",1,1);}}
+      first=null;};
+    grid.appendChild(b);})(r,c);}}
+  m.appendChild(el("div",{class:"card"},[el("div",{class:"cw-area"},[el("div",{class:"cw-scroll"},grid),el("div",{class:"stack"},[el("h3",null,"Find these words"),wl,defs,status,
+    el("div",{class:"row"},[el("button",{class:"btn ghost",type:"button",onclick:function(e){var h=!wl.hidden;wl.hidden=h;defs.hidden=!h;e.target.textContent=h?"Show list":"Hide list";}},"Hide list"),
+      el("button",{class:"btn ghost",type:"button",onclick:render},"New puzzle")])])])]));
+}
+function scrambleGame(m){
+  m.appendChild(tnote("Scrambled Words","<ul><li>Students click the letters in the right order to make the word. <b>Undo</b> removes the last letter.</li><li><b>Hint</b> shows a clue and the "+CFG.supportLang+" meaning, but the word is then worth 1 point instead of 2.</li><li>Idea: show it on the screen as a speed race. The first team to write the word correctly on the board wins.</li></ul>"));
+  var u=U(),q=shuffle(u.vocab).slice(0,10),i=0,score=0,card=el("div",{class:"card bigcard"});
+  function show(){card.innerHTML="";
+    if(i>=q.length){record("scramble",score,q.length*2);card.append(el("div",{class:"w"},"Score: "+score+" / "+q.length*2),el("p",{class:"muted"},"2 points without a hint, 1 point with a hint."),el("button",{class:"btn",type:"button",onclick:render},"Play again"));return;}
+    var v=q[i],letters=scramble(v[0]).split(""),built=[],used=[],hinted=false;
+    var line=el("div",{class:"answer-line","aria-live":"polite"}),tiles=el("div",{class:"tiles"}),fb=el("p");
+    var hint=el("p",{class:"muted",hidden:true},[v[6]+" · ",el("span",{class:"ar",style:"display:inline"},v[4])]);
+    function upd(){line.textContent=built.join("")||" ";}
+    letters.forEach(function(ch,idx){var b=el("button",{class:"tile",type:"button"},ch);b.onclick=function(){built.push(ch);used.push(b);b.disabled=true;upd();
+      if(built.length===letters.length){if(built.join("").toLowerCase()===v[0]){var p=hinted?1:2;score+=p;fb.innerHTML="<span class='ok'>Correct! +"+p+"</span>";setTimeout(function(){i++;show();},900);}
+        else{fb.innerHTML="<span class='no'>Not quite. Try again.</span>";}}};tiles.appendChild(b);});
+    upd();
+    card.append(el("span",{class:"pill"},"Word "+(i+1)+" of "+q.length+" · Score "+score),tiles,line,fb,hint,
+      el("div",{class:"row",style:"justify-content:center"},[
+        el("button",{class:"btn ghost",type:"button",onclick:function(){if(!built.length) return;built.pop();used.pop().disabled=false;fb.textContent="";upd();}},"Undo"),
+        el("button",{class:"btn ghost",type:"button",onclick:function(){hinted=true;hint.hidden=false;}},"Hint"),
+        el("button",{class:"btn ghost",type:"button",onclick:function(){fb.innerHTML="Answer: <b>"+esc(v[0])+"</b>";setTimeout(function(){i++;show();},1400);}},"Give up")]));}
+  show();m.appendChild(card);
+}
+function whoami(m){
+  m.appendChild(tnote("Who Am I?","<ul><li>Clues appear one at a time. A correct guess after clue 1 = 3 points, clue 2 = 2 points, clue 3 = 1 point.</li><li>Clue 1 is the word type and length, clue 2 is a simple meaning, and clue 3 is a sentence with a gap and the first letter.</li><li>Idea: after the game, each student writes her own Who Am I? riddle for a unit word and tests a partner.</li></ul>"));
+  var u=U(),q=shuffle(u.vocab).slice(0,8),i=0,score=0,card=el("div",{class:"card bigcard"});
+  function show(){card.innerHTML="";
+    if(i>=q.length){record("who",score,q.length*3);card.append(el("div",{class:"w"},"Score: "+score+" / "+q.length*3),el("button",{class:"btn",type:"button",onclick:render},"Play again"));return;}
+    var v=q[i],level=1,clues=el("ol",{class:"whoclues",style:"text-align:left;max-width:860px;margin:14px auto"}),fb=el("p");
+    var C=["I am "+article(POS[v[1]])+" "+POS[v[1]]+". I have "+v[0].length+" letters.","Clue: "+v[6]+".","Fill the gap: “"+blankWord(v[3],v[0])+"” · First letter: "+v[0][0].toUpperCase()];
+    function drawClues(){clues.innerHTML="";for(var k=0;k<level;k++) clues.appendChild(el("li",{style:"margin:6px 0"},C[k]));}
+    var inp=el("input",{id:"who-in","aria-label":"Your guess",autocomplete:"off",style:"border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:1.6rem;width:min(380px,100%);background:var(--bg)"});
+    var more=el("button",{class:"btn ghost",type:"button",onclick:function(){if(level<3){level++;drawClues();if(level===3) more.disabled=true;}}},"Next clue");
+    function guess(){if(normAns(inp.value)===v[0]){var p=4-level;score+=p;fb.innerHTML="<span class='ok'>Yes! I am “"+esc(v[0])+"”. +"+p+"</span>";setTimeout(function(){i++;show();},1100);}
+      else{fb.innerHTML="<span class='no'>Not me. "+(level<3?"Try again or take the next clue.":"Try again.")+"</span>";}}
+    inp.onkeydown=function(e){if(e.key==="Enter") guess();};
+    drawClues();
+    card.append(el("span",{class:"pill"},"Riddle "+(i+1)+" of "+q.length+" · Score "+score),el("h3",{style:"font-size:1.8rem;margin-top:10px"},"Who am I?"),clues,inp,fb,
+      el("div",{class:"row",style:"justify-content:center"},[more,el("button",{class:"btn",type:"button",onclick:guess},"Guess"),
+        el("button",{class:"btn ghost",type:"button",onclick:function(){fb.innerHTML="I am <b>"+esc(v[0])+"</b>.";setTimeout(function(){i++;show();},1400);}},"Show answer")]));
+    setTimeout(function(){inp.focus();},50);}
+  show();m.appendChild(card);
+}
+
+/* ===== Sources and references ===== */
+var REFMAP={vocab:"vocab",colloc:null,games:"vocab",puzzles:"vocab",reading:"reading",grammar:null,listening:"listening",writing:"writing"};
+function refKeys(sec,ui){var ks=(SECREFS[sec]||[]).slice(),m=REFMAP[sec];if(m) ks=ks.concat(UREFS[ui==null?S.u:ui][m]||[]);
+  return ks.filter(function(k,i){return ks.indexOf(k)===i&&R[k];});}
+function refItem(k,plain){var r=R[k];
+  var kids=[r.a+" ("+r.y+"). ",el("i",null,r.t),". "+(r.s&&r.s!==r.a?r.s+". ":"")];
+  kids.push(plain?el("span",{class:"rurl"},r.u):el("a",{href:r.u,target:"_blank",rel:"noopener"},r.u));
+  if(r.n) kids.push(el("span",{class:"rnote"}," [Used for: "+r.n+"]"));
+  return el("li",null,kids);}
+function secKey(){return S.sec==="ielts"?(S.sub.ielts||"reading"):S.sec;}
+function refBox(sec){var ks=refKeys(sec);
+  return el("details",{class:"refs"},[el("summary",null,"Sources and references"),el("div",{class:"refbody"},[
+    el("p",null,SECNOTE[sec]||""),
+    ks.length?el("ol",null,ks.map(function(k){return refItem(k);})):el("p",{class:"muted"},"No external sources were used for this section."),
+    el("p",{class:"muted small"},REF_ACCESSED+" Full materials statement: Teacher Guide → Materials statement and references.")])]);}
+function printRefs(sec){var ks=refKeys(sec);
+  return el("div",{class:"prefs"},[el("h3",null,"Sources"),el("p",null,SECNOTE[sec]||""),
+    ks.length?el("ol",null,ks.map(function(k){return refItem(k,true);})):null,
+    el("p",null,CFG.originLine+" "+REF_ACCESSED)]);}
+function fullRefs(){
+  var box=el("div",{class:"refbody"},[el("p",null,REF_STATEMENT),el("h4",null,"Frameworks and test formats"),
+    el("ol",null,["cup_toc","cefr","ielts_read","ielts_listen","ielts_org","bc_format"].filter(function(k){return R[k];}).map(function(k){return refItem(k);}))]);
+  UNITS.forEach(function(u,i){var parts=[["vocab","Vocabulary, games and puzzles"],["reading","Reading"],["listening","Listening"],["writing","Writing"]],any=false,sec=el("div");
+    sec.appendChild(el("h4",null,"Unit "+u.id+": "+u.title));
+    parts.forEach(function(p){var ks=UREFS[i][p[0]];if(!ks.length) return;any=true;sec.appendChild(el("p",{class:"small"},el("b",null,p[1])));sec.appendChild(el("ol",null,ks.map(function(k){return refItem(k);})));});
+    if(!any) sec.appendChild(el("p",{class:"muted small"},"No external sources: all content in this unit is original, and any figures are invented for practice."));
+    box.appendChild(sec);});
+  box.appendChild(el("p",{class:"muted small"},REF_ACCESSED));
+  return el("details",{class:"tnote",style:"margin-top:16px"},[el("summary",null,"Materials statement and references"),box]);
+}
+
+/* ===== Printing ===== */
+function printNode(node){
+  var r=document.getElementById("print-root");r.innerHTML="";r.appendChild(node);
+  document.documentElement.classList.add("printing");
+  setTimeout(function(){try{window.print();}catch(e){toast("Printing is not available here. Press Ctrl+P.");}},60);
+}
+window.addEventListener("afterprint",function(){document.documentElement.classList.remove("printing");});
+function printHead(title,sub){return el("div",{class:"ph"},[el("div",{class:"ph-top"},[el("span",null,CFG.printTitle+" · Unit "+U().id+": "+U().title),el("span",null,"Name: ____________________   Date: ____________")]),el("h1",null,title),sub?el("p",{class:"ph-sub"},sub):null]);}
+
+/* ===== IELTS practice ===== */
+function viewIELTS(m){
+  var st=subTabs("ielts",[["reading","Reading"],["listening","Listening"],["grammar","Grammar Doctor"]]);m.appendChild(st.bar);
+  if(st.cur==="reading") reading(m);else if(st.cur==="listening") viewListening(m);else grammar(m);
+}
+var TFL={T:"TRUE",F:"FALSE",NG:"NOT GIVEN"};
+function printReading(withKey){
+  var R=U().reading,g0=R.tfng.length+1,d=el("div");
+  d.appendChild(printHead("Reading: "+R.title,"Suggested time: 12 minutes"));
+  R.paras.forEach(function(p,i){d.appendChild(el("p",{class:"pp"},[el("b",null,String.fromCharCode(65+i)+"  "),p]));});
+  d.appendChild(el("h2",null,"Questions 1–"+R.tfng.length));
+  d.appendChild(el("p",{class:"pi"},"Do the following statements agree with the information in the text? Write TRUE, FALSE or NOT GIVEN."));
+  R.tfng.forEach(function(q,i){d.appendChild(el("p",{class:"pq"},[el("b",null,(i+1)+".  "),q[0]+"   ",el("span",{class:"pline"},"______________")]));});
+  d.appendChild(el("h2",null,"Questions "+g0+"–"+(g0+R.gaps.length-1)));
+  d.appendChild(el("p",{class:"pi"},"Complete the sentences. Write NO MORE THAN TWO WORDS AND/OR A NUMBER from the text for each answer."));
+  R.gaps.forEach(function(g,i){d.appendChild(el("p",{class:"pq"},[el("b",null,(g0+i)+".  "),g[0].replace("______","______________")]));});
+  if(withKey){d.appendChild(el("div",{class:"pbreak"}));d.appendChild(el("h2",null,"Answer key"));
+    R.tfng.forEach(function(q,i){d.appendChild(el("p",{class:"pq"},[el("b",null,(i+1)+".  "),TFL[q[1]]+" · "+q[2]]));});
+    R.gaps.forEach(function(g,i){d.appendChild(el("p",{class:"pq"},[el("b",null,(g0+i)+".  "),g[1].join(" / ")]));});}
+  d.appendChild(printRefs("reading"));printNode(d);
+}
+function reading(m){
+  m.appendChild(tnote(CFG.examShort+" Reading","<ol><li>An original text set in "+CFG.settingName+", with two exam-style question types: True / False / Not Given and sentence completion (no more than two words).</li><li>Suggested time: 12 minutes with the timer. Remind students: <b>False</b> = the text says the opposite; <b>Not Given</b> = the text does not give this information.</li><li>After <b>Check answers</b>, the evidence from the text appears under each question.</li><li>Use the print buttons under the page to print the text and questions for the class, and a separate answer key for you.</li></ol>"));
+  var u=U(),R=u.reading,t=Timer(720);
+  var passage=el("div",{class:"card passage"},[el("div",{class:"row",style:"justify-content:space-between;margin-bottom:10px"},[el("h3",{style:"font-size:1.4rem"},R.title),t.node])]);
+  R.paras.forEach(function(p,i){passage.appendChild(el("p",null,[el("b",null,String.fromCharCode(65+i)),p]));});
+  var qs=el("div",{class:"card"}),tfIn=[],gapIn=[];
+  qs.appendChild(el("h3",null,"Questions 1–"+R.tfng.length));
+  qs.appendChild(el("p",{class:"muted"},"Do the statements agree with the information in the text? Choose TRUE, FALSE or NOT GIVEN."));
+  R.tfng.forEach(function(q,i){var name="tf"+i,fb=el("div",{class:"fb"});
+    var opts=el("div",{class:"opts",role:"radiogroup","aria-label":"Question "+(i+1)},[["T","TRUE"],["F","FALSE"],["NG","NOT GIVEN"]].map(function(o){return el("label",null,[el("input",{type:"radio",name:name,value:o[0],id:name+o[0]}),o[1]]);}));
+    tfIn.push({opts:opts,fb:fb});qs.appendChild(el("div",{class:"tf"},[el("div",null,[el("b",null,(i+1)+". "),q[0]]),opts,fb]));});
+  var g0=R.tfng.length+1;
+  qs.appendChild(el("h3",{style:"margin-top:18px"},"Questions "+g0+"–"+(g0+R.gaps.length-1)));
+  qs.appendChild(el("p",{class:"muted"},"Complete the sentences. Write NO MORE THAN TWO WORDS AND/OR A NUMBER from the text."));
+  R.gaps.forEach(function(g,i){var parts=g[0].split("______"),inp=el("input",{id:"gap"+i,"aria-label":"Answer "+(g0+i),autocomplete:"off"}),fb=el("span",{class:"fb"});gapIn.push({inp:inp,fb:fb});
+    qs.appendChild(el("div",{class:"qline"},[el("b",null,(g0+i)+"."),el("span",null,parts[0]),inp,el("span",null,parts[1]),fb]));});
+  var res=el("div",{class:"scorebig"});
+  qs.appendChild(el("div",{class:"row",style:"margin-top:14px"},[el("button",{class:"btn",type:"button",onclick:function(){var sc=0;
+    R.tfng.forEach(function(q,i){var ch=tfIn[i].opts.querySelector("input:checked"),v=ch?ch.value:null,ok=v===q[1];if(ok) sc++;
+      tfIn[i].fb.innerHTML=(ok?"<span class='ok'>Correct</span>":"<span class='no'>"+(v?"Not correct":"No answer")+"</span>")+" · Answer: <span class='badge "+q[1]+"'>"+TFL[q[1]]+"</span> · "+esc(q[2]);});
+    R.gaps.forEach(function(g,i){var a=normAns(gapIn[i].inp.value),ok=g[1].some(function(x){return normAns(x)===a;}),wc=a?a.split(" ").length:0;if(ok) sc++;
+      gapIn[i].inp.className=ok?"ok":"no";gapIn[i].fb.innerHTML=ok?"<span class='ok'>Correct</span>":"<span class='no'>Answer: "+esc(g[1][0])+"</span>"+(wc>2?" (more than two words)":"");});
+    var tot=R.tfng.length+R.gaps.length;res.textContent=sc+" / "+tot;record("reading",sc,tot);t.stop();}},"Check answers"),
+    el("button",{class:"btn ghost",type:"button",onclick:render},"Try again"),res]));
+  m.appendChild(el("div",{class:"reading"},[passage,qs]));
+  m.appendChild(el("div",{class:"card printbar"},[el("b",null,"Print this reading"),
+    el("button",{class:"btn",type:"button",onclick:function(){printReading(false);}},"Print text and questions"),
+    el("button",{class:"btn ghost",type:"button",onclick:function(){printReading(true);}},"Print with answer key")]));
+}
+function grammar(m){
+  m.appendChild(tnote("Grammar Doctor","<ul><li>Each sentence has one common mistake. Students click the wrong word. If a word is missing, they click the word before or after the gap.</li><li>When they find it, the correct sentence and the rule appear in English, with a short "+CFG.supportLang+" note. Only correct first tries count in the score.</li><li>Idea: each team writes a new wrong sentence with the same rule to challenge the other teams.</li></ul>"));
+  var u=U(),rules=E().rulesEn,box=el("div",{class:"card"}),score=0,doneN=0,res=el("p",{class:"scorebig"});
+  box.appendChild(howTo(["Each sentence has <b>one</b> mistake.","Click the word that is wrong. If a word is <b>missing</b>, click the word just before or after the gap.","Wrong click? The word turns orange; try again.","Right click? The word turns green, and you see the correct sentence and the rule."]));
+  shuffle(u.errors.map(function(e,i){return i;})).forEach(function(ei,idx){var e=u.errors[ei];
+    var w=e[0].split(" "),r=e[1].split(" "),a=0;while(a<w.length&&a<r.length&&w[a]===r[a]) a++;
+    var b=0;while(b<w.length-a&&b<r.length-a&&w[w.length-1-b]===r[r.length-1-b]) b++;
+    var lo=a,hi=w.length-1-b,ins=hi<lo;
+    if(ins){lo=Math.max(0,a-1);hi=Math.min(w.length-1,a);}
+    var tries=0,solved=false,fix=el("div",{class:"fix",hidden:true},[el("div",null,[el("span",{class:"ok"},"Correct sentence: "),e[1]]),el("div",null,[el("b",null,"Rule: "),rules[ei]]),el("div",{class:"ar small"},e[2])]);
+    var toks=el("div",{class:"tokens"});
+    w.forEach(function(word,i){var t=el("button",{class:"tok",type:"button"},word);
+      t.onclick=function(){if(solved) return;tries++;
+        var hit=i>=lo&&i<=hi;
+        if(hit){solved=true;doneN++;if(tries===1) score++;if(ins) t.classList.add("hit");else for(var k=lo;k<=hi;k++) toks.children[k].classList.add("hit");fix.hidden=false;
+          res.textContent=score+" / "+u.errors.length+" correct first time";if(doneN===u.errors.length) record("grammar",score,u.errors.length);}
+        else{t.classList.add("miss");setTimeout(function(){t.classList.remove("miss");},500);}};
+      toks.appendChild(t);});
+    box.appendChild(el("div",{class:"gd"},[el("div",{class:"muted"},"Sentence "+(idx+1)),toks,fix]));
+  });
+  box.appendChild(el("div",{class:"row",style:"margin-top:12px"},[res,el("button",{class:"btn ghost",type:"button",onclick:render},"Start again")]));
+  m.appendChild(box);
+}
+
+/* ===== Listening ===== */
+var player=null;
+function stopPlayer(){if(player){player.stop();player=null;}}
+function Player(L,onSeg){
+  var segs=[];L.script.forEach(function(l){(l[1].match(/[^.!?]+[.!?]+["”’]?|[^.!?]+$/g)||[l[1]]).forEach(function(s){segs.push({who:l[0],text:s.trim()});});});
+  var idx=0,playing=false,rate=0.9,api={segs:segs};
+  var who=Object.keys(L.speakers);
+  function voices(){try{var v=speechSynthesis.getVoices().filter(function(x){return /^en/i.test(x.lang);});
+    v.sort(function(a,b){return (/en-GB/i.test(b.lang)?1:0)-(/en-GB/i.test(a.lang)?1:0);});return v;}catch(e){return [];}}
+  function speakNext(){
+    if(!playing) return;
+    if(idx>=segs.length){playing=false;idx=0;onSeg(-1,"done");return;}
+    var s=segs[idx],u;try{u=new SpeechSynthesisUtterance(s.text);}catch(e){playing=false;onSeg(-1,"error");return;}
+    var vs=voices(),k=who.indexOf(s.who);
+    if(vs.length){u.voice=vs[Math.min(k,vs.length-1)]||vs[0];u.lang=u.voice.lang;}else u.lang="en-GB";
+    if(vs.length<2&&k===1) u.pitch=1.3;
+    u.rate=rate;
+    u.onend=function(){if(!playing) return;idx++;setTimeout(speakNext,k===who.indexOf((segs[idx]||{}).who)?150:450);};
+    u.onerror=function(){};
+    onSeg(idx,"play");speechSynthesis.speak(u);
+  }
+  api.play=function(){if(!("speechSynthesis" in window)){onSeg(-1,"error");return;}if(playing) return;playing=true;try{speechSynthesis.cancel();}catch(e){}speakNext();};
+  api.pause=function(){playing=false;try{speechSynthesis.cancel();}catch(e){}onSeg(idx,"paused");};
+  api.stop=function(){playing=false;idx=0;try{speechSynthesis.cancel();}catch(e){}onSeg(-1,"stopped");};
+  api.back=function(){var was=playing;api.pause();idx=Math.max(0,idx-1);if(was) api.play();else onSeg(idx,"paused");};
+  api.setRate=function(r){rate=r;};
+  api.isPlaying=function(){return playing;};
+  return api;
+}
+function listenInstr(L){
+  if(L.type==="flow") return "Complete the flow chart below. Write ONE WORD AND/OR A NUMBER for each answer.";
+  if(L.type==="notes") return "Complete the notes below. Write ONE WORD AND/OR A NUMBER for each answer.";
+  return "Complete the sentences below. Write NO MORE THAN TWO WORDS AND/OR A NUMBER for each answer.";
+}
+function printListening(withScript){
+  var L=E().listening,d=el("div");
+  d.appendChild(printHead("Listening: "+L.title,listenInstr(L)));
+  var lastH=null;
+  L.items.forEach(function(it,i){
+    if(L.type==="notes"&&it[2]!==lastH){lastH=it[2];d.appendChild(el("h2",null,it[2]));}
+    d.appendChild(el("p",{class:"pq"+(L.type==="flow"?" pflow":"")},[el("b",null,(i+1)+".  "),it[0].replace("______","______________")]));
+    if(L.type==="flow"&&i<L.items.length-1) d.appendChild(el("p",{class:"parrow"},"↓"));
+  });
+  if(withScript){d.appendChild(el("div",{class:"pbreak"}));d.appendChild(el("h2",null,"Answer key"));
+    L.items.forEach(function(it,i){d.appendChild(el("p",{class:"pq"},[el("b",null,(i+1)+".  "),it[1].join(" / ")]));});
+    d.appendChild(el("h2",null,"Audio script"));
+    L.script.forEach(function(l){d.appendChild(el("p",{class:"pp"},[el("b",null,L.speakers[l[0]]+": "),l[1]]));});}
+  d.appendChild(printRefs("listening"));printNode(d);
+}
+function viewListening(m){
+  var L=E().listening;
+  m.appendChild(tnote("Listening","<ol><li>Each unit has an original listening set in "+CFG.settingName+", with sentence, flow-chart or note completion.</li><li>The audio is read aloud by the computer's English voice. Click <b>Play</b>; use <b>Back</b> to repeat a sentence. In the test students hear the audio once, but in class you can play it twice.</li><li>If you prefer a human voice, record yourself reading the script (print it with <b>Print with answers and script</b>), then load the recording with <b>Use my own recording</b>.</li><li>Give students 30 seconds to read the questions before you play the audio.</li></ol>"));
+  var status=el("span",{class:"muted"},"Ready"),bar=el("div",{class:"meter"},el("i",{style:"width:0"})),transcript=el("div",{class:"transcript",hidden:true}),lines=[];
+  var P=Player(L,function(i,state){
+    if(state==="error"){status.textContent="This browser cannot read the audio aloud. Read the script to the class or use your own recording.";return;}
+    lines.forEach(function(x,k){x.classList.toggle("cur",k===i);});
+    bar.firstChild.style.width=(i<0?(state==="done"?100:0):Math.round(i/P.segs.length*100))+"%";
+    status.textContent=state==="play"?"Playing… ("+(i+1)+" / "+P.segs.length+")":state==="paused"?"Paused":state==="done"?"Finished":"Ready";
+    playBtn.textContent=state==="play"?"Pause":"Play";});
+  player=P;
+  P.segs.forEach(function(s){var sp=el("span",{class:"seg"},s.text+" ");lines.push(sp);});
+  var lastWho=null,para=null;P.segs.forEach(function(s,i){
+    if(s.who!==lastWho){para=el("p",null,Object.keys(L.speakers).length>1?el("b",null,L.speakers[s.who]+": "):null);transcript.appendChild(para);lastWho=s.who;}para.appendChild(lines[i]);});
+  var playBtn=el("button",{class:"btn gold",type:"button",onclick:function(){if(P.isPlaying()) P.pause();else P.play();}},"Play");
+  var speed=el("select",{id:"speed","aria-label":"Speed",onchange:function(){P.setRate(+speed.value);}},[["0.75","Slow"],["0.9","Normal"],["1","Fast"]].map(function(o){return el("option",{value:o[0],selected:o[0]==="0.9"?true:null},o[1]);}));
+  var own=el("input",{type:"file",accept:"audio/*",id:"own-audio",class:"visually-hidden",onchange:function(){var f=own.files&&own.files[0];if(!f) return;P.stop();audioBox.innerHTML="";audioBox.appendChild(el("audio",{controls:true,src:URL.createObjectURL(f)}));audioBox.appendChild(el("p",{class:"muted"},"Playing your recording: "+f.name));}});
+  var audioBox=el("div");
+  var playerCard=el("div",{class:"card stack"},[el("span",{class:"pill"},"Listening · "+({sentences:"Sentence completion",flow:"Flow-chart completion",notes:"Note completion"})[L.type]),el("h3",{style:"font-size:1.4rem"},L.title),
+    el("div",{class:"row"},[playBtn,el("button",{class:"btn ghost",type:"button",onclick:function(){P.back();}},"Back"),el("button",{class:"btn ghost",type:"button",onclick:function(){P.stop();}},"Stop"),el("label",{class:"row",style:"gap:6px"},["Speed",speed])]),
+    bar,status,
+    el("div",{class:"row"},[el("label",{class:"btn ghost small",for:"own-audio"},"Use my own recording"),own]),audioBox,
+    el("button",{class:"btn ghost small",type:"button",onclick:function(e){transcript.hidden=!transcript.hidden;e.target.textContent=transcript.hidden?"Show script":"Hide script";}},"Show script"),transcript]);
+  var qs=el("div",{class:"card"}),ins=[];
+  qs.appendChild(el("h3",null,"Questions 1–"+L.items.length));
+  qs.appendChild(el("p",{class:"muted"},listenInstr(L)));
+  var wrap=el("div",{class:L.type==="flow"?"flow":L.type==="notes"?"notes":""});
+  if(L.type==="notes") wrap.appendChild(el("h4",{class:"notes-title"},(function(t){return t.charAt(0).toUpperCase()+t.slice(1);})(L.title.replace(/^Talk: /,""))));
+  var lastH=null;
+  L.items.forEach(function(it,i){var parts=it[0].split("______"),inp=el("input",{id:"li"+i,"aria-label":"Answer "+(i+1),autocomplete:"off"}),fb=el("span",{class:"fb"});ins.push({inp:inp,fb:fb});
+    var line=[el("b",null,(i+1)+"."),el("span",null,parts[0]),inp,el("span",null,parts[1]),fb];
+    if(L.type==="flow"){wrap.appendChild(el("div",{class:"fbox"},line));if(i<L.items.length-1) wrap.appendChild(el("div",{class:"farrow","aria-hidden":"true"},"↓"));}
+    else if(L.type==="notes"){if(it[2]!==lastH){lastH=it[2];wrap.appendChild(el("div",{class:"nhead"},it[2]));}wrap.appendChild(el("div",{class:"qline nline"},line));}
+    else wrap.appendChild(el("div",{class:"qline"},line));});
+  qs.appendChild(wrap);
+  var res=el("div",{class:"scorebig"});
+  qs.appendChild(el("div",{class:"row",style:"margin-top:14px"},[el("button",{class:"btn",type:"button",onclick:function(){var sc=0;
+    L.items.forEach(function(it,i){var a=normAns(ins[i].inp.value),ok=it[1].some(function(x){return normAns(x)===a;});if(ok) sc++;
+      ins[i].inp.className=ok?"ok":"no";ins[i].fb.innerHTML=ok?"<span class='ok'>Correct</span>":"<span class='no'>Answer: "+esc(it[1][0])+"</span>";});
+    res.textContent=sc+" / "+L.items.length;record("listening",sc,L.items.length);}},"Check answers"),el("button",{class:"btn ghost",type:"button",onclick:render},"Try again"),res]));
+  m.appendChild(el("div",{class:"reading"},[playerCard,qs]));
+  m.appendChild(el("div",{class:"card printbar"},[el("b",null,"Print this listening"),
+    el("button",{class:"btn",type:"button",onclick:function(){printListening(false);}},"Print questions"),
+    el("button",{class:"btn ghost",type:"button",onclick:function(){printListening(true);}},"Print with answers and script")]));
+}
+
+/* ===== Writing checker (rule-based, offline) ===== */
+var UNC="information|advice|homework|furniture|equipment|knowledge|luggage|baggage|news|traffic|money|water|bread|rice|sugar|research";
+var CHECK_RULES=[
+ {re:/\b(people|children|students|families|teenagers|parents|they|we)\s+(is|was|has|does|doesn't)\b/gi,msg:"Subject–verb agreement",fix:"Plural subjects take are / were / have / do / don't.",type:"grammar"},
+ {re:/\b(he|she|it|everyone|everybody|nobody)\s+(have|are|were|don't)\b/gi,msg:"Subject–verb agreement",fix:"Singular subjects take has / is / was / doesn't.",type:"grammar"},
+ {re:/\bmore\s+(\w+er)\b/gi,msg:"Double comparative",fix:"Do not use 'more' with -er: say 'bigger', not 'more bigger'.",type:"grammar",skip:/^more\s+(other|over|under|water|power|paper|number|computer|summer|winter|order|matter|answer|together|later|cover|consider|offer|deliver|enter|remember|register|discover|rather|either|whether|ever|never|however|further)$/i},
+ {re:/\bmost\s+(\w+est)\b/gi,msg:"Double superlative",fix:"Do not use 'most' with -est: say 'the biggest', not 'the most biggest'.",type:"grammar",skip:/^most\s+(interest|honest|modest|forest|request|suggest)$/i},
+ {re:/\b(didn't|did not|doesn't|does not|don't|do not|can|can't|cannot|could|should|must|will|won't|would|may|might)\s+(\w+ed)\b/gi,msg:"Verb form after a modal or 'did / do'",fix:"Use the base form: 'didn't go', 'can make', 'will change'.",type:"grammar",skip:/\s(need|be|feed|seed|bleed|speed|succeed|proceed|exceed|shed|wed|embed)$/i},
+ {re:/\b(should|must|can|could|will|would|might|may)\s+to\s+\w+/gi,msg:"No 'to' after this modal",fix:"Say 'should use', not 'should to use'.",type:"grammar"},
+ {re:/\b(enjoy|enjoys|enjoyed|avoid|avoids|finish|finished|suggest|suggests|mind|keep|keeps)\s+to\s+\w+/gi,msg:"Verb + -ing",fix:"After enjoy / avoid / finish / suggest / keep, use -ing: 'enjoy playing'.",type:"grammar"},
+ {re:/\b(want|wants|wanted|decide|decided|hope|hoped|plan|planned|would like|refuse|refused|agree|agreed)\s+(\w+ing)\b/gi,msg:"Verb + to + verb",fix:"After want / decide / hope / plan / would like, use 'to' + verb: 'want to learn'.",type:"grammar",skip:/\s(nothing|something|anything|everything|thing|king|evening|morning|building|meeting|clothing|shopping|training|parking|feeling|beginning)$/i},
+ {re:new RegExp("\\b(many|a few|several|these|those)\\s+("+UNC+")\\b","gi"),msg:"Uncountable noun",fix:"Use 'much' or 'a lot of', and no plural: 'a lot of information'.",type:"grammar"},
+ {re:/\b(informations|advices|homeworks|furnitures|equipments|knowledges|luggages|breads|traffics)\b/gi,msg:"Uncountable noun with -s",fix:"These nouns have no plural form: 'information', 'advice'.",type:"grammar"},
+ {re:/\ba\s+(?!uni|use|usu|euro|one|once|uk\b|us\b|ur)([aeiou]\w*)/gi,msg:"a / an",fix:"Use 'an' before a vowel sound: 'an engineer', 'an hour'.",type:"grammar"},
+ {re:/\ban\s+(?!hour|honest|honou?r|heir|mba|mp\b|sms|x\b)([bcdfgjklmnpqrstvwxyz]\w*)/gi,msg:"a / an",fix:"Use 'a' before a consonant sound: 'a car', 'a university'.",type:"grammar"},
+ {re:/\bsince\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|many|several|a few)\s+(years?|months?|weeks?|days?|hours?)\b/gi,msg:"for / since",fix:"Use 'for' with a period of time: 'for five years'. Use 'since' with a starting point: 'since 2020'.",type:"grammar"},
+ {re:/\bin\s+the\s+internet\b/gi,msg:"Preposition",fix:"Say 'on the internet'.",type:"grammar"},
+ {re:/\bdiscuss(es|ed)?\s+about\b/gi,msg:"No preposition after 'discuss'",fix:"Say 'discuss the problem', not 'discuss about'.",type:"grammar"},
+ {re:/\bexplain(s|ed)?\s+(me|him|her|us|them)\b/gi,msg:"explain + to",fix:"Say 'explain to me', or 'explain something to me'.",type:"grammar"},
+ {re:/\bin the other hand\b/gi,msg:"Linking phrase",fix:"Say 'On the other hand'.",type:"grammar"},
+ {re:/\bdespite of\b/gi,msg:"Linking phrase",fix:"Say 'despite' or 'in spite of', not 'despite of'.",type:"grammar"},
+ {re:/\baccording to me\b/gi,msg:"Opinion phrase",fix:"Say 'In my opinion' or 'In my view'.",type:"grammar"},
+ {re:/\b(in my opinion|in my view),?\s+i\s+(think|believe)\b/gi,msg:"Repeated opinion phrase",fix:"Use one: 'In my opinion, …' or 'I think …'.",type:"style"},
+ {re:/\balthough\b[^.!?]*,\s*but\b/gi,msg:"although … but",fix:"Do not use 'although' and 'but' in the same sentence.",type:"grammar"},
+ {re:/\b(I'm|I've|I'll|I'd|it's|that's|there's|they're|we're|you're|isn't|aren't|wasn't|weren't|don't|doesn't|didn't|can't|won't|wouldn't|shouldn't|couldn't|haven't|hasn't)\b/gi,msg:"Contraction",fix:"In academic writing, use full forms: 'do not', 'it is'.",type:"style"},
+ {re:/\b(gonna|wanna|kinda|kids|stuff|guys|okay|ok|awesome|cool|etc)\b/gi,msg:"Informal word",fix:"Use a more formal word, e.g. children, things, many / a lot of. Avoid 'etc.'",type:"style"},
+ {re:/\b(\w+)\s+\1\b/gi,msg:"Repeated word",fix:"The same word is written twice.",type:"grammar",skip:/^(that that|had had)$/i}
+];
+function lineOf(text,i){var a=text.lastIndexOf("\n",i)+1,b=text.indexOf("\n",i);if(b<0) b=text.length;var s=text.slice(a,b);return s.length>140?"…"+text.slice(Math.max(a,i-60),Math.min(b,i+70))+"…":s;}
+function checkWriting(text,w,ui){
+  var issues=[],good=[],struct=[],T=text.replace(/\r/g,"");
+  var words=(T.trim().match(/\S+/g)||[]).length;
+  var paras=T.split(/\n\s*\n|\n/).map(function(p){return p.trim();}).filter(Boolean);
+  var sents=T.replace(/\n/g," ").split(/(?<=[.!?])\s+/).map(function(s){return s.trim();}).filter(Boolean);
+  var low=T.toLowerCase();
+  function has(re){return re.test(low);}
+  function cnt(re){return (low.match(re)||[]).length;}
+  // structure
+  struct.push(words>=w.words?{ok:true,t:"Length: "+words+" words (target "+w.words+"+)."}:{ok:false,t:"Length: "+words+" words. Write at least "+w.words+" words."});
+  var needP=w.task===1?3:4;
+  struct.push(paras.length>=needP?{ok:true,t:"Paragraphs: "+paras.length+"."}:{ok:false,t:"Paragraphs: "+paras.length+". Use at least "+needP+" paragraphs, separated by an empty line."});
+  var link=["but","although","so that","first","firstly","secondly","then","next","after that","finally","however","in addition","moreover","also","because","for example","for instance","on the other hand","in contrast","while","whereas","therefore","as a result","overall","in conclusion","to conclude","to sum up"].filter(function(x){return low.indexOf(x)>=0;});
+  struct.push(link.length>=4?{ok:true,t:"Linking words: "+link.length+" different ones ("+link.slice(0,6).join(", ")+(link.length>6?", …":"")+")."}:{ok:false,t:"Linking words: only "+link.length+". Use more, e.g. However, In addition, For example, Finally."});
+  if(w.task===1){
+    struct.push(has(/\b(overall|in general|in summary|to sum up)\b/)?{ok:true,t:"Overview: found."}:{ok:false,t:"Overview: not found. Add a sentence beginning with 'Overall, …'."});
+    if(has(/\b(i think|in my opinion|i believe|in my view|i feel)\b/)) struct.push({ok:false,t:"Opinion: Task 1 should not include your opinion."});
+    if(w.kind==="process"){var pas=cnt(/\b(is|are)\s+\w+(ed|en|ld|lt|ut|un|wn)\b/g);struct.push(pas>=3?{ok:true,t:"Passive: "+pas+" present passive verbs."}:{ok:false,t:"Passive: only "+pas+". Use the present simple passive: 'The resin is collected'."});
+      var seq=["first","next","then","after that","finally","after this","once","following this"].filter(function(x){return low.indexOf(x)>=0;}).length;struct.push(seq>=3?{ok:true,t:"Sequencing words: "+seq+"."}:{ok:false,t:"Sequencing words: only "+seq+". Use First, Next, After that, Then, Finally."});}
+    if(w.kind==="map"){var pp=cnt(/\b(was|were)\s+\w+(ed|en|lt|wn|ilt)\b/g);struct.push(pp>=2?{ok:true,t:"Past passive: "+pp+"."}:{ok:false,t:"Past passive: only "+pp+". Say 'A new building was built', 'The car park was replaced'."});
+      struct.push(has(/\b(north|south|east|west|next to|opposite|between|in front of|behind|near)\b/)?{ok:true,t:"Expressions of place: found."}:{ok:false,t:"Expressions of place: not found. Use in the north, next to, opposite."});}
+    if(w.kind==="line"||w.kind==="piebar"){var nums=(T.match(/\d+/g)||[]).length;struct.push(nums>=4?{ok:true,t:"Numbers from the figure: "+nums+"."}:{ok:false,t:"Numbers: only "+nums+". Support your comparisons with figures from the chart."});}
+  } else {
+    struct.push(has(/\b(in my opinion|in my view|i (strongly |partly )?(agree|disagree|believe|think)|i tend to)\b/)?{ok:true,t:"Your opinion: found."}:{ok:false,t:"Your opinion: not found. Say clearly what you think, e.g. 'In my opinion, …'."});
+    struct.push(has(/\b(for example|for instance|such as)\b/)?{ok:true,t:"Examples: found."}:{ok:false,t:"Examples: not found. Add 'For example, …' to support your ideas."});
+    struct.push(has(/\b(in conclusion|to conclude|to sum up|in summary)\b/)?{ok:true,t:"Conclusion: found."}:{ok:false,t:"Conclusion: not found. Begin your last paragraph with 'In conclusion, …'."});
+    if(/why|reasons/i.test(w.prompt)&&/what can be done|solutions|protect/i.test(w.prompt)) struct.push(has(/\b(because|cause|reason|due to)\b/)&&has(/\b(should|solution|could|can be done|must)\b/)?{ok:true,t:"Both parts of the question: causes and solutions found."}:{ok:false,t:"Two-part question: make sure you write about both causes and solutions."});
+  }
+  // mechanics
+  if(/(^|[^a-z])i([^a-z'’]|$)/.test(T)) issues.push({msg:"Capital I",fix:"Always write 'I' as a capital letter.",type:"grammar",ex:lineOf(T,T.search(/(^|[^a-zA-Z])i([^a-zA-Z'’]|$)/))});
+  var lowStart=sents.filter(function(s){return /^[a-z]/.test(s);});
+  if(lowStart.length) issues.push({msg:"Capital letter at the start of a sentence",fix:"Start every sentence with a capital letter.",type:"grammar",ex:lowStart[0].slice(0,90)});
+  if(T.trim()&&!/[.!?]["”’)]?\s*$/.test(T.trim())) issues.push({msg:"Final full stop",fix:"End your last sentence with a full stop.",type:"grammar",ex:T.trim().slice(-80)});
+  sents.forEach(function(s){var n=(s.match(/\S+/g)||[]).length;if(n>40) issues.push({msg:"Very long sentence ("+n+" words)",fix:"Split it into two or three sentences.",type:"style",ex:s.slice(0,110)+"…"});});
+  if(/ {2,}/.test(T)) issues.push({msg:"Extra spaces",fix:"Use one space between words.",type:"style",ex:lineOf(T,T.search(/ {2,}/))});
+  if(/\s+[,.]/.test(T)) issues.push({msg:"Space before punctuation",fix:"Write the comma or full stop directly after the word.",type:"style",ex:lineOf(T,T.search(/\s+[,.]/))});
+  // rule patterns
+  CHECK_RULES.forEach(function(r){r.re.lastIndex=0;var m,seen=0;while((m=r.re.exec(T))&&seen<3){if(r.skip&&r.skip.test(m[0])) continue;seen++;
+    issues.push({msg:r.msg,fix:r.fix,type:r.type,ex:lineOf(T,m.index),hit:m[0]});}});
+  // vocabulary from the unit
+  var u=UNITS[ui],used=u.vocab.filter(function(v){return stemRe(v[0]).test(T);}).map(function(v){return v[0];});
+  var col=u.colloc.filter(function(c){return low.indexOf(c[0].toLowerCase().replace(/^(a|an|the) /,""))>=0;}).map(function(c){return c[0];});
+  if(used.length) good.push("Unit words you used: "+used.join(", ")+".");
+  if(col.length) good.push("Collocations you used: "+col.join(", ")+".");
+  if(!used.length&&!col.length) good.push("Try to use some words and collocations from this unit.");
+  return {issues:issues,struct:struct,good:good,words:words};
+}
+function renderCheck(res){
+  var box=el("div",{class:"wcheck"});
+  box.appendChild(el("div",{class:"wc-note"},"This checker finds common mistakes only. It cannot give a band score or grade, and it may miss some mistakes or show a few false alarms. Your teacher's feedback is still the most important. Red underlines in the text box are spelling mistakes from your browser."));
+  box.appendChild(el("h4",null,"1. Task and organisation"));
+  box.appendChild(el("ul",{class:"wc-list"},res.struct.map(function(s){return el("li",{class:s.ok?"wc-ok":"wc-no"},[el("span",{class:"wc-ic","aria-hidden":"true"},s.ok?"✓":"!"),s.t]);})));
+  var g=res.issues.filter(function(i){return i.type==="grammar";}),st=res.issues.filter(function(i){return i.type==="style";});
+  function list(arr){return arr.length?el("ul",{class:"wc-list"},arr.map(function(i){return el("li",{class:"wc-no"},[el("span",{class:"wc-ic","aria-hidden":"true"},"!"),el("div",null,[el("b",null,i.msg+": "),i.fix,i.ex?el("div",{class:"wc-ex"},["“",i.hit?hl(i.ex,i.hit):i.ex,"”"]):null])]);})):el("p",{class:"wc-ok"},"✓ No common mistakes of this type were found.");}
+  function hl(s,h){var k=s.toLowerCase().indexOf(h.toLowerCase());if(k<0) return s;return el("span",null,[s.slice(0,k),el("mark",null,s.slice(k,k+h.length)),s.slice(k+h.length)]);}
+  box.appendChild(el("h4",null,"2. Grammar and accuracy ("+g.length+")"));box.appendChild(list(g));
+  box.appendChild(el("h4",null,"3. Academic style ("+st.length+")"));box.appendChild(list(st));
+  box.appendChild(el("h4",null,"4. Vocabulary"));box.appendChild(el("ul",{class:"wc-list"},res.good.map(function(t){return el("li",{class:"wc-ok"},[el("span",{class:"wc-ic","aria-hidden":"true"},"★"),t]);})));
+  return box;
+}
+
+/* ===== Writing ===== */
+function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function niceTop(max){var step=max>100?20:max>50?20:max>20?10:max>10?5:2;return {step:step,top:Math.ceil(max/step)*step};}
+function barChart(d){
+  var W=640,H=320,pl=46,pr=14,pt=16,pb=64,max=Math.max.apply(null,d.values),nt=niceTop(max),step=nt.step,top=nt.top;
+  var ink=cssv("--ink"),mut=cssv("--muted"),line=cssv("--line"),acc=cssv("--accent");
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(d.title)+'">';
+  for(var v=0;v<=top;v+=step){var y=pt+(H-pt-pb)*(1-v/top);s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="'+line+'"/><text x="'+(pl-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="12" fill="'+mut+'">'+v+'</text>';}
+  var n=d.values.length,bw=(W-pl-pr)/n;
+  d.values.forEach(function(val,i){var h=(H-pt-pb)*val/top,x=pl+i*bw+bw*.18,y=H-pb-h;
+    s+='<rect x="'+x+'" y="'+y+'" width="'+bw*.64+'" height="'+h+'" rx="4" fill="'+acc+'"/>';
+    s+='<text x="'+(x+bw*.32)+'" y="'+(y-6)+'" text-anchor="middle" font-size="13" font-weight="700" fill="'+ink+'">'+val+(d.unit||"")+'</text>';
+    s+='<text x="'+(x+bw*.32)+'" y="'+(H-pb+18)+'" text-anchor="middle" font-size="12" fill="'+ink+'">'+esc(d.labels[i])+'</text>';});
+  s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+(H-pb)+'" y2="'+(H-pb)+'" stroke="'+mut+'"/></svg>';
+  return el("div",{class:"chart",html:s});
+}
+function lineChart(d){
+  var W=640,H=330,pl=46,pr=20,pt=16,pb=70;
+  var mx=0;(d.series||[]).forEach(function(se){(se[1]||[]).forEach(function(v){if(+v>mx) mx=+v;});});
+  var un=(d.unit==null?"%":d.unit),top=100,step=20;
+  if(!(un==="%"&&mx<=100)){var raw=Math.max(mx,1)/5,mag=Math.pow(10,Math.floor(Math.log10(raw))),nr=raw/mag;step=(nr<=1?1:nr<=2?2:nr<=2.5?2.5:nr<=5?5:10)*mag;top=Math.ceil(mx*1.12/step)*step||step*5;}
+  var ink=cssv("--ink"),mut=cssv("--muted"),line=cssv("--line"),cols=[cssv("--accent"),cssv("--gold"),"#7a5bbf"];
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(d.title)+'">';
+  for(var v=0;v<=top;v+=step){var y=pt+(H-pt-pb)*(1-v/top);s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="'+line+'"/><text x="'+(pl-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="12" fill="'+mut+'">'+(Math.round(v*100)/100)+un+'</text>';}
+  var n=d.labels.length,X=function(i){return pl+20+i*(W-pl-pr-40)/(n-1);},Y=function(v){return pt+(H-pt-pb)*(1-v/top);};
+  d.labels.forEach(function(l,i){s+='<text x="'+X(i)+'" y="'+(H-pb+20)+'" text-anchor="middle" font-size="12" fill="'+ink+'">'+l+'</text>';});
+  d.series.forEach(function(se,k){var c=cols[k%3];s+='<polyline fill="none" stroke="'+c+'" stroke-width="3" points="'+se[1].map(function(v,i){return X(i)+","+Y(v);}).join(" ")+'"/>';
+    se[1].forEach(function(v,i){s+='<circle cx="'+X(i)+'" cy="'+Y(v)+'" r="4.5" fill="'+c+'"/><text x="'+X(i)+'" y="'+(Y(v)+(k%2?18:-9))+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+ink+'">'+v+'</text>';});
+    s+='<rect x="'+(pl+20+k*150)+'" y="'+(H-28)+'" width="14" height="14" rx="3" fill="'+c+'"/><text x="'+(pl+40+k*150)+'" y="'+(H-17)+'" font-size="13" fill="'+ink+'">'+esc(se[0])+'</text>';});
+  s+='</svg>';return el("div",{class:"chart",html:s});
+}
+function pieChart(d){
+  var W=640,H=300,cx=150,cy=150,r=125,ink=cssv("--ink"),surf=cssv("--surface");
+  var cols=[cssv("--accent"),cssv("--gold"),"#4b5ea8","#c2410c","#7c3aed","#8a9aa9"],tot=d.values.reduce(function(a,b){return a+b;},0),a0=-Math.PI/2;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(d.title)+'">';
+  d.values.forEach(function(v,i){var a1=a0+2*Math.PI*v/tot,large=a1-a0>Math.PI?1:0;
+    s+='<path d="M'+cx+','+cy+' L'+(cx+r*Math.cos(a0))+','+(cy+r*Math.sin(a0))+' A'+r+','+r+' 0 '+large+' 1 '+(cx+r*Math.cos(a1))+','+(cy+r*Math.sin(a1))+' Z" fill="'+cols[i%cols.length]+'" stroke="'+surf+'" stroke-width="2"/>';
+    var am=(a0+a1)/2;if(v>=8) s+='<text x="'+(cx+r*.62*Math.cos(am))+'" y="'+(cy+r*.62*Math.sin(am)+5)+'" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">'+v+'%</text>';
+    s+='<rect x="320" y="'+(50+i*34)+'" width="18" height="18" rx="3" fill="'+cols[i%cols.length]+'"/><text x="348" y="'+(64+i*34)+'" font-size="15" fill="'+ink+'">'+esc(d.labels[i])+' ('+v+'%)</text>';
+    a0=a1;});
+  s+='</svg>';return el("div",{class:"chart",html:s});
+}
+function processDiagram(f){
+  var g=el("div",{class:"process"});
+  f.steps.forEach(function(st,i){g.appendChild(el("div",{class:"pstep"},[el("span",{class:"pnum"},String(i+1)),el("span",null,st)]));});
+  return el("div",null,[el("p",{class:"figtitle"},f.title),g,el("p",{class:"muted small"},"Read the stages from 1 to 6.")]);
+}
+function mapDiagram(f){
+  var ink=cssv("--ink"),mut=cssv("--muted"),line=cssv("--line"),acc=cssv("--accent"),tint=cssv("--tint"),gold=cssv("--gold"),bg=cssv("--surface");
+  var fill={field:"#cfe8c9",empty:"none",bld:cssv("--bg"),park:line,"new":tint};
+  var s='<svg viewBox="0 0 640 290" role="img" aria-label="'+esc(f.title)+'">';
+  f.maps.forEach(function(mp,k){var ox=10+k*320;
+    s+='<text x="'+(ox+150)+'" y="18" text-anchor="middle" font-size="15" font-weight="700" fill="'+ink+'">'+mp.year+'</text><g transform="translate('+ox+',26)">';
+    s+='<rect x="10" y="10" width="280" height="200" fill="'+bg+'" stroke="'+ink+'" stroke-width="2" rx="4"/>';
+    s+='<rect x="137" y="85" width="16" height="135" fill="'+line+'"/><text x="145" y="250" text-anchor="middle" font-size="12" fill="'+ink+'">Main gate ▲</text>';
+    mp.items.forEach(function(it){var dash=it[5]==="empty"?' stroke-dasharray="5 4"':'';
+      s+='<rect x="'+it[0]+'" y="'+it[1]+'" width="'+it[2]+'" height="'+it[3]+'" rx="3" fill="'+fill[it[5]]+'" stroke="'+(it[5]==="new"?acc:mut)+'" stroke-width="'+(it[5]==="new"?2:1.2)+'"'+dash+'/>';
+      var words=it[4].split(" "),cxm=it[0]+it[2]/2,cym=it[1]+it[3]/2;
+      if(words.length>1&&it[2]<110){s+='<text x="'+cxm+'" y="'+(cym-2)+'" text-anchor="middle" font-size="12" fill="'+ink+'">'+words[0]+'</text><text x="'+cxm+'" y="'+(cym+12)+'" text-anchor="middle" font-size="12" fill="'+ink+'">'+words.slice(1).join(" ")+'</text>';}
+      else s+='<text x="'+cxm+'" y="'+(cym+4)+'" text-anchor="middle" font-size="12" fill="'+ink+'">'+esc(it[4])+'</text>';});
+    if(mp.trees){for(var y=150;y<=200;y+=25){s+='<circle cx="128" cy="'+y+'" r="5" fill="#5aa65a"/><circle cx="162" cy="'+y+'" r="5" fill="#5aa65a"/>';}}
+    s+='<text x="282" y="26" text-anchor="end" font-size="11" fill="'+mut+'">N ↑</text></g>';});
+  s+='</svg>';
+  return el("div",{class:"chart"},[el("p",{class:"figtitle"},f.title),el("div",{html:s}),el("p",{class:"muted small"},"Trees along the main road are shown as small green circles.")]);
+}
+function writingFigure(w){
+  if(w.kind==="process") return processDiagram(w.fig);
+  if(w.kind==="map") return mapDiagram(w.fig);
+  if(w.kind==="line") return el("div",null,[el("p",{class:"figtitle"},w.fig.title),lineChart(w.fig)]);
+  if(w.kind==="piebar") return el("div",{class:"stack"},[el("p",{class:"figtitle"},w.fig.pie.title),pieChart(w.fig.pie),el("p",{class:"figtitle"},w.fig.bar.title),barChart(w.fig.bar)]);
+  return null;
+}
+function printWriting(){
+  var w=E().writing,d=el("div");
+  d.appendChild(printHead("Writing Task "+w.task,"You should spend about "+w.time+" minutes on this task."));
+  d.appendChild(el("p",{class:"ptask"},w.prompt));
+  var f=writingFigure(w);if(f) d.appendChild(f);
+  d.appendChild(el("h2",null,"Plan"));
+  w.plan.forEach(function(p){d.appendChild(el("p",{class:"pq"},[el("b",null,p[0]+": "),p[1]]));d.appendChild(el("div",{class:"plines"}));});
+  d.appendChild(el("h2",null,"Remember to"));
+  d.appendChild(el("ul",null,w.remember.map(function(r){return el("li",null,r);})));
+  d.appendChild(printRefs("writing"));printNode(d);
+}
+function viewWriting(m){
+  var u=U(),w=E().writing,target=w.words;
+  m.appendChild(tnote("Writing Task "+w.task,"<ol><li>Each unit has an original writing task set in "+CFG.settingName+", with a figure (process, map or chart) for Task 1 or a question for Task 2.</li><li>Start with the figure or the question orally, then look at the language box and the plan together.</li><li>Students plan in the boxes (5 minutes), then write. The timer is set to the test time ("+w.time+" minutes).</li><li>Use <b>Remember to</b> as a self-check or peer-check before students hand in their work. <b>Print task</b> prints the task, the figure and a planning page.</li><li><b>Check my writing</b> lets students practise alone. It checks length, paragraphs, linking words and the key features of this task type (for example an overview in Task 1, or an opinion and examples in Task 2). It also flags about 30 common grammar and style mistakes, such as <i>people is</i>, <i>more bigger</i>, <i>didn\'t went</i> or <i>many informations</i>, and lists the unit words students used. The browser underlines spelling mistakes in red. It is a rule-based helper: it cannot give a band score and it will not catch every mistake, so it supports your feedback but does not replace it.</li></ol>"));
+  var key="draft_u"+u.id+"_w",ta=el("textarea",{id:"ta-w","aria-label":"Your answer",placeholder:"Write your answer here. Leave an empty line between paragraphs.",spellcheck:"true",lang:"en"});ta.value=store.get(key,"");
+  var wc=el("span",{class:"wc"});
+  function count(){var n=(ta.value.trim().match(/\S+/g)||[]).length;wc.textContent=n+" / "+target+" words";wc.className="wc "+(n>=target?"ok":"");store.set(key,ta.value);}
+  ta.oninput=count;count();
+  var t=Timer(w.time*60);
+  var left=el("div",{class:"card stack"},[
+    el("span",{class:"pill"},"Writing Task "+w.task+" · "+w.time+" minutes · at least "+w.words+" words"),
+    el("div",{class:"skills"},[el("b",null,"In this unit you will practise how to:"),el("ul",null,w.skills.map(function(s){return el("li",null,s);}))]),
+    el("div",{class:"taskbox"},[el("b",null,"Exam task"),el("p",null,w.prompt)]),
+    writingFigure(w),
+    el("div",{class:"langbox"},[el("b",null,w.lang.title),el("ul",null,w.lang.items.map(function(s){return el("li",null,s);}))])
+  ]);
+  var pl=el("div",{class:"plan4"});
+  w.plan.forEach(function(p,i){var pk="plan_u"+u.id+"_w"+i,a=el("textarea",{id:"plan-"+i,"aria-label":p[0],placeholder:p[1]});a.value=store.get(pk,"");a.oninput=function(){store.set(pk,a.value);};pl.appendChild(el("label",null,[el("b",null,p[0]),a]));});
+  left.append(el("h3",null,"Plan (5 minutes)"),pl);
+  var fbBox=el("div",{"aria-live":"polite"});
+  var chk=el("div",{class:"check"});w.remember.forEach(function(c,i){chk.appendChild(el("label",null,[el("input",{type:"checkbox",id:"chk-w"+i}),c]));});
+  var right=el("div",{class:"card stack"},[el("div",{class:"row",style:"justify-content:space-between"},[t.node,wc]),ta,
+    el("div",{class:"row"},[el("button",{class:"btn ghost",type:"button",onclick:function(){try{navigator.clipboard.writeText(ta.value).then(function(){toast("Copied");},function(){toast("Copy is blocked here. Select the text and press Ctrl+C.");});}catch(e){toast("Copy is blocked here. Select the text and press Ctrl+C.");}}},"Copy text"),
+      el("button",{class:"btn ghost",type:"button",onclick:function(){ta.value="";count();}},"Clear"),
+      el("button",{class:"btn",type:"button",onclick:printWriting},"Print task")]),
+    el("button",{class:"btn gold",type:"button",onclick:function(){fbBox.innerHTML="";if(!ta.value.trim()){fbBox.appendChild(el("p",{class:"no"},"Write your answer first, then click Check my writing."));return;}fbBox.appendChild(renderCheck(checkWriting(ta.value,w,S.u)));fbBox.scrollIntoView({behavior:"smooth",block:"start"});}},"Check my writing"),
+    fbBox,
+    el("h3",null,"Remember to"),chk]);
+  m.appendChild(el("div",{class:"grid2 wgrid"},[left,right]));
+}
+
+/* ===== Progress ===== */
+function viewProgress(m){
+  m.appendChild(tnote("Progress","<ul><li>The table shows the best score (%) for each activity in each unit on <b>this device</b>.</li><li>If students use their own devices, ask them to show or screenshot this page at the end of the unit.</li><li>Green = 80% or more, gold = 50–79%, orange = below 50%.</li></ul>"));
+  var acts=[["flash","Flashcards"],["colloc","Match"],["collocgap","Collocation gaps"],["scramble","Scramble"],["who","Who am I"],["reading","Reading"],["listening","Listening"],["grammar","Grammar"]];
+  var p=store.get("progress",{});
+  var t=el("table",{class:"list prog"},[el("tr",null,[el("th",null,"Unit")].concat(acts.map(function(a){return el("th",null,a[1]);})))]);
+  UNITS.forEach(function(u){t.appendChild(el("tr",null,[el("td",null,el("b",null,u.id+". "+u.title))].concat(acts.map(function(a){var v=p["u"+u.id+":"+a[0]];
+    return el("td",null,v==null?el("span",{class:"muted"},"–"):el("span",{class:"cellp "+(v>=80?"p-hi":v>=50?"p-mid":"p-lo")},v+"%"));}))));});
+  m.appendChild(el("div",{class:"card tblwrap"},[t,el("div",{style:"height:12px"}),el("button",{class:"btn ghost",type:"button",onclick:function(){var c=el("div",null,[el("h3",null,"Clear all saved results on this device?"),el("div",{style:"height:16px"}),
+    el("div",{class:"row"},[el("button",{class:"btn",type:"button",onclick:function(){store.set("progress",{});close();render();}},"Yes, clear"),el("button",{class:"btn ghost",type:"button",onclick:function(){close();}},"Cancel")])]);var close=modal(c);}},"Clear results")]));
+}
+
+/* ---------- shell ---------- */
+function render(){
+  clearTimers();stopPlayer();
+  if(S.sec!=="games"&&S.sec!=="puzzles"&&document.documentElement.classList.contains("present")) setPresent(false);
+  var unitsBar=document.getElementById("units");unitsBar.innerHTML="";
+  UNITS.forEach(function(u,i){unitsBar.appendChild(el("button",{class:"unit",type:"button","aria-current":i===S.u?"true":"false",onclick:function(){S.u=i;store.set("u",i);render();}},[el("b",null,"Unit "+u.id),el("span",null,u.title)]));});
+  var tabs=document.getElementById("tabs");tabs.innerHTML="";
+  SECTIONS.forEach(function(s){tabs.appendChild(el("button",{type:"button","aria-current":S.sec===s.id?"true":"false",onclick:function(){S.sec=s.id;store.set("sec",s.id);render();}},s.label));});
+  var m=document.getElementById("main");m.innerHTML="";
+  var u=U();
+  m.appendChild(el("div",{class:"head"},[el("div",null,[el("div",{class:"muted"},S.sec==="progress"?"All units":"Unit "+u.id+" · "+SECTIONS.filter(function(s){return s.id===S.sec;})[0].label),el("h2",null,S.sec==="progress"?"Progress":u.title)]),
+    S.sec==="progress"?null:el("div",{class:"ar"},CFG.unitWord+" "+u.id+": "+u.ar)]));
+  ({guide:viewGuide,vocab:viewVocab,colloc:viewColloc,games:viewGames,puzzles:viewPuzzles,ielts:viewIELTS,listening:viewListening,writing:viewWriting,progress:viewProgress})[S.sec](m);
+  if(S.sec==="guide") m.appendChild(fullRefs());else if(S.sec!=="progress") m.appendChild(refBox(secKey()));
+}
+function init(){
+  S.u=Math.min(Math.max(+store.get("u",0)||0,0),UNITS.length-1);
+  var sec=store.get("sec","guide");if(SECTIONS.some(function(s){return s.id===sec;})) S.sec=sec;
+  var big=store.get("big",false);document.documentElement.classList.toggle("big",big);
+  var bBig=document.getElementById("btn-big"),bSb=document.getElementById("btn-sb"),bTh=document.getElementById("btn-theme");
+  bBig.setAttribute("aria-pressed",big?"true":"false");
+  bBig.onclick=function(){big=!big;store.set("big",big);document.documentElement.classList.toggle("big",big);bBig.setAttribute("aria-pressed",big?"true":"false");};
+  bSb.onclick=function(){sbOn=!sbOn;bSb.setAttribute("aria-pressed",sbOn?"true":"false");renderSB();};
+  bTh.onclick=function(){var root=document.documentElement,cur=root.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+    var nx=cur==="dark"?"light":"dark";root.setAttribute("data-theme",nx);bTh.setAttribute("aria-pressed",nx==="dark"?"true":"false");if(S.sec==="writing") render();};
+  renderSB();render();
+  document.getElementById("exit-present").onclick=function(){setPresent(false);};
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&document.documentElement.classList.contains("present")&&!document.querySelector(".modal")) setPresent(false);});
+  document.addEventListener("fullscreenchange",function(){if(!document.fullscreenElement&&document.documentElement.classList.contains("present")) setPresent(false);});
+}
+window.MC={makeCrossword:makeCrossword,makeSearch:makeSearch,checkWriting:checkWriting};
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);else init();
+})();
+
+</script>
+</body>
+</html>
